@@ -11,14 +11,15 @@ export interface NewsItem {
 }
 
 // AI摘要接口
+// src/types/news.ts
 export interface AISummary {
   summary: string;
   timeline: string[];
   knowledgePoints: string[];
   impact?: string;
   tags?: string[];
+  error?: string; // 添加error属性，标记为可选
 }
-
 // API响应接口
 export interface APIResponse<T> {
   success: boolean;

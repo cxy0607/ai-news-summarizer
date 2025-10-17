@@ -1,12 +1,13 @@
+// ai-news-summarizer/src/app/api/summarize/route.ts
 import { NextResponse } from 'next/server';
 import { generateAISummary } from '@/lib/ai-service';
 
-// 限流配置
+// 补充缺失的常量和缓存对象
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1分钟
-const MAX_REQUESTS_PER_WINDOW = 10; // 每分钟最多10次请求
-const requestCache = new Map<string, number[]>(); // 存储请求记录
+const MAX_REQUESTS_PER_WINDOW = 10;
+const requestCache = new Map<string, number[]>();
 
-// 检查限流
+// 每分钟最多10次请求
 function checkRateLimit(identifier: string): boolean {
   const now = Date.now();
   const windowStart = now - RATE_LIMIT_WINDOW;
@@ -34,38 +35,28 @@ function checkRateLimit(identifier: string): boolean {
   return true;
 }
 
+// 处理POST请求
 export async function POST(request: Request) {
   try {
-    // 获取客户端IP作为限流标识
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const { newsContent } = await request.json();
     
-    // 检查限流
-    if (!checkRateLimit(ip)) {
+    // 获取客户端IP作为标识符
+    const identifier = request.headers.get('x-forwarded-for') || 'unknown';
+    
+    // 检查速率限制
+    if (!checkRateLimit(identifier)) {
       return NextResponse.json(
-        { success: false, error: '请求过于频繁，请1分钟后再试' },
+        { error: '请求过于频繁，请稍后再试' },
         { status: 429 }
       );
     }
     
-    const { newsContent } = await request.json();
-    
-    if (!newsContent) {
-      return NextResponse.json(
-        { success: false, error: '缺少新闻内容' },
-        { status: 400 }
-      );
-    }
-    
-    const summary = await generateAISummary(newsContent);
-    
-    return NextResponse.json({
-      success: true,
-      data: summary
-    });
+    const result = await generateAISummary(newsContent);
+    return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    console.error('摘要API错误:', error);
+    console.error('摘要生成接口错误:', error);
     return NextResponse.json(
-      { success: false, error: '生成摘要失败' },
+      { error: error instanceof Error ? error.message : '服务器内部错误' },
       { status: 500 }
     );
   }
