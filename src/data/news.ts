@@ -83,4 +83,4 @@ export const mockNews: NewsItem[] = [
 ];
 
 // 分类选项
-export const categories = ['全部', '科技', '环境', '汽车', '航天', '医疗'];
+export const categories = [ '科技', '环境', '汽车', '航天', '医疗'];

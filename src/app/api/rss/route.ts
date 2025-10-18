@@ -1,44 +1,44 @@
-// ai-news-summarizer/src/app/api/summarize/route.ts
 import { NextResponse } from 'next/server';
 import { generateAISummary } from '@/lib/ai-service';
 
-// 补充缺失的常量和缓存对象
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1分钟
-const MAX_REQUESTS_PER_WINDOW = 10;
-const requestCache = new Map<string, number[]>();
+// 简单的速率限制实现
+const rateLimits = new Map<string, { count: number; lastReset: number }>();
 
-// 每分钟最多10次请求
 function checkRateLimit(identifier: string): boolean {
   const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW;
+  const windowMs = 60 * 1000; // 1分钟
+  const maxRequests = 5; // 每分钟最多5次请求
+
+  const entry = rateLimits.get(identifier) || { count: 0, lastReset: now };
   
-  // 清理过期的记录
-  for (const [key, timestamps] of requestCache.entries()) {
-    const validTimestamps = timestamps.filter((time: number) => time > windowStart);
-    if (validTimestamps.length === 0) {
-      requestCache.delete(key);
-    } else {
-      requestCache.set(key, validTimestamps);
-    }
+  // 如果超过时间窗口，重置计数
+  if (now - entry.lastReset > windowMs) {
+    entry.count = 1;
+    entry.lastReset = now;
+    rateLimits.set(identifier, entry);
+    return true;
   }
   
-  // 检查当前用户的请求频率
-  const userRequests = requestCache.get(identifier) || [];
-  const recentRequests = userRequests.filter((time: number) => time > windowStart);
-  
-  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
-    return false;
+  // 检查是否超过请求限制
+  if (entry.count < maxRequests) {
+    entry.count++;
+    rateLimits.set(identifier, entry);
+    return true;
   }
   
-  recentRequests.push(now);
-  requestCache.set(identifier, recentRequests);
-  return true;
+  return false;
 }
 
-// 处理POST请求
 export async function POST(request: Request) {
   try {
     const { newsContent } = await request.json();
+    
+    if (!newsContent) {
+      return NextResponse.json(
+        { error: '缺少新闻内容' },
+        { status: 400 }
+      );
+    }
     
     // 获取客户端IP作为标识符
     const identifier = request.headers.get('x-forwarded-for') || 'unknown';

@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowLeft, Search, Filter } from 'lucide-react';
 import NewsCard from '@/components/NewsCard';
 import { NewsItem } from '@/types/news';
-import { Search, Filter, ArrowLeft } from 'lucide-react';
 import { mockNews, categories } from '@/data/news';
 
 export default function CategoryPage() {
@@ -44,6 +44,7 @@ export default function CategoryPage() {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* 导航栏 */}
@@ -68,7 +69,7 @@ export default function CategoryPage() {
 
       {/* 搜索区域 */}
       <div className="max-w-6xl mx-auto px-4 mb-12">
-        <div className="glass-card p-4 shadow-xl">
+        <div className="bg-white/80 backdrop-blur-sm p-4 shadow-xl rounded-xl">
           <div className="flex items-center">
             <Search className="w-5 h-5 text-gray-400 ml-2 mr-3" />
             <input 

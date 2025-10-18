@@ -1,37 +1,30 @@
-import { AISummary } from '@/types/news';
+import { AISummary } from '@/types/ai';
 
-// 获取百度千帆的Access Token
+// 获取百度API访问令牌
 async function getAccessToken(): Promise<string> {
-  // 修复API地址错误（原地址有拼写错误）
-  const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${process.env.BAIDU_API_KEY}&client_secret=${process.env.BAIDU_SECRET_KEY}`;
-  
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP错误! 状态码: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (!data.access_token) {
-      throw new Error('获取访问令牌失败: ' + JSON.stringify(data));
-    }
-    
-    return data.access_token;
-  } catch (error) {
-    console.error('获取Access Token失败:', error);
-    throw new Error('无法连接到AI服务，请检查网络连接和API配置');
+  const authUrl = 'https://aip.baidubce.com/oauth/2.0/token';
+  const grantType = 'client_credentials';
+  const { BAIDU_API_KEY, BAIDU_SECRET_KEY } = process.env;
+
+  if (!BAIDU_API_KEY || !BAIDU_SECRET_KEY) {
+    throw new Error('百度API密钥未配置');
   }
+
+  const response = await fetch(
+    `${authUrl}?grant_type=${grantType}&client_id=${BAIDU_API_KEY}&client_secret=${BAIDU_SECRET_KEY}`,
+    { method: 'POST' }
+  );
+
+  const data = await response.json();
+  
+  if (!data.access_token) {
+    throw new Error(`获取访问令牌失败: ${data.error_description || '未知错误'}`);
+  }
+
+  return data.access_token;
 }
 
-// 调用文心大模型生成摘要（完善类型定义）
+// 调用文心大模型生成摘要
 export async function generateAISummary(newsContent: string): Promise<AISummary> {
   try {
     // 检查环境变量
@@ -56,6 +49,7 @@ export async function generateAISummary(newsContent: string): Promise<AISummary>
 
 【新闻原文】
 ${truncatedContent}
+
 
 【分析要求】
 请严格按照以下JSON格式输出结果：
@@ -135,16 +129,5 @@ ${truncatedContent}
       tags: [],
       error: errorMessage
     };
-  }
-}
-
-// 测试AI连接
-export async function testAIConnection(): Promise<boolean> {
-  try {
-    const testContent = '这是一个测试内容，用于验证AI服务连接是否正常。';
-    const result = await generateAISummary(testContent);
-    return !result.error && result.summary !== '抱歉，AI服务暂时不可用';
-  } catch {
-    return false;
   }
 }
