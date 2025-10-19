@@ -237,3 +237,22 @@ export async function fetchNews(
 
   return { news: paginatedNews, failedSources };
 }
+// 在文件末尾添加以下代码
+export async function getNewsById(id: string): Promise<NewsItem | undefined> {
+  // 尝试从所有新闻源中查找匹配的新闻
+  // 1. 先检查是否是模拟新闻ID
+  const mockNews = getMockNews();
+  const mockItem = mockNews.find(item => item.id === id);
+  if (mockItem) {
+    return mockItem;
+  }
+
+  // 2. 检查是否是真实抓取的新闻（通过API获取所有新闻后筛选）
+  try {
+    const { news } = await fetchNews(); // 获取所有新闻
+    return news.find(item => item.id === id);
+  } catch (error) {
+    console.error('获取新闻详情失败:', error);
+    return undefined;
+  }
+}

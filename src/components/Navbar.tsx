@@ -1,138 +1,70 @@
-// src/components/Navbar.tsx
-'use client';
-
+import React from 'react';
+import { Menu, X, User, Bookmark, History, Home } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { 
-  Home, Bookmark, History, User, Menu, X, 
-  MessageSquare, Sun, Moon, Search 
-} from 'lucide-react';
+import { NavbarProps } from '@/types/navbar';
+import { useRouter } from 'next/router';
 
-export default function Navbar() {
-  const [activePath, setActivePath] = useState('');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-
-  // 初始化路由和暗黑模式状态
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // 同步当前路由
-      setActivePath(window.location.pathname);
-      const handleRouteChange = () => setActivePath(window.location.pathname);
-      window.addEventListener('popstate', handleRouteChange);
-
-      // 同步暗黑模式设置
-      const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-      setDarkMode(savedDarkMode);
-      document.documentElement.classList.toggle('dark', savedDarkMode);
-
-      return () => window.removeEventListener('popstate', handleRouteChange);
-    }
-  }, []);
-
-  // 切换暗黑模式
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem('darkMode', newMode.toString());
-    document.documentElement.classList.toggle('dark', newMode);
-  };
-
-  // 反馈功能处理
-  const handleFeedback = () => {
-    alert('反馈功能：请输入您的建议或问题');
-  };
-
-  // 导航项激活样式处理
-  const getNavClass = (path: string) => 
-    activePath === path 
-      ? 'text-blue-600 font-medium' 
-      : 'text-gray-600 hover:text-blue-600 transition-colors';
+const Navbar: React.FC<NavbarProps> = ({
+  textColor = 'text-gray-800',
+  activeColor = 'text-blue-600',
+  isMobileMenuOpen = false,
+  onToggleMobileMenu
+}) => {
+  // 获取当前路径
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 shadow-sm z-50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-blue-500/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* 左侧：Logo + 核心导航 */}
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center">
-              <span className="text-xl font-bold text-blue-600">智闻快览</span>
+          <div className="flex items-center">
+            <Link href="/" className="flex-shrink-0 flex items-center">
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">
+                智能新闻
+              </span>
             </Link>
-            
-            {/* 桌面端导航菜单 */}
-            <div className="hidden md:flex items-center gap-6">
-              <Link href="/" className={getNavClass('/')}>
-                <div className="flex items-center gap-1.5">
-                  <Home className="w-4 h-4" />
-                  <span>首页</span>
-                </div>
-              </Link>
-              <Link href="/favorites" className={getNavClass('/favorites')}>
-                <div className="flex items-center gap-1.5">
-                  <Bookmark className="w-4 h-4" />
-                  <span>收藏</span>
-                </div>
-              </Link>
-              <Link href="/history" className={getNavClass('/history')}>
-                <div className="flex items-center gap-1.5">
-                  <History className="w-4 h-4" />
-                  <span>历史</span>
-                </div>
-              </Link>
-            </div>
           </div>
 
-          {/* 右侧：功能按钮区 */}
-          <div className="flex items-center gap-4">
-            {/* 搜索按钮 */}
-            <button 
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="搜索新闻"
+          {/* 桌面导航 */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link 
+              href="/" 
+              className={`${currentPath === '/' ? activeColor : textColor} hover:text-cyan-400 transition-colors flex items-center gap-1.5`}
             >
-              <Search className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            </button>
-            
-            {/* 暗黑模式切换 */}
-            <button 
-              onClick={toggleDarkMode}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label={darkMode ? "切换到浅色模式" : "切换到暗黑模式"}
+              <Home className="w-4 h-4" />
+              <span>首页</span>
+            </Link>
+            <Link 
+              href="/favorites" 
+              className={`${currentPath === '/favorites' ? activeColor : textColor} hover:text-cyan-400 transition-colors flex items-center gap-1.5`}
             >
-              {darkMode ? (
-                <Sun className="w-5 h-5 text-gray-600" />
-              ) : (
-                <Moon className="w-5 h-5 text-gray-600" />
-              )}
-            </button>
-            
-            {/* 反馈按钮（仅桌面显示） */}
-            <button 
-              onClick={handleFeedback}
-              className="hidden md:flex items-center gap-1.5 text-gray-600 hover:text-blue-600 transition-colors"
-              aria-label="反馈建议"
+              <Bookmark className="w-4 h-4" />
+              <span>收藏</span>
+            </Link>
+            <Link 
+              href="/history" 
+              className={`${currentPath === '/history' ? activeColor : textColor} hover:text-cyan-400 transition-colors flex items-center gap-1.5`}
             >
-              <MessageSquare className="w-4 h-4" />
-              <span>反馈</span>
-            </button>
-            
-            {/* 个人中心入口 */}
+              <History className="w-4 h-4" />
+              <span>历史</span>
+            </Link>
             <Link 
               href="/personal" 
-              className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 transition-colors"
-              aria-label="个人中心"
+              className={`${currentPath === '/personal' ? activeColor : textColor} hover:text-cyan-400 transition-colors flex items-center gap-1.5`}
             >
               <User className="w-4 h-4" />
-              <span className="hidden md:inline">我的</span>
+              <span>我的</span>
             </Link>
-            
-            {/* 移动端菜单按钮 - 修复三元运算符语法 */}
+          </div>
+
+          {/* 移动端菜单按钮 */}
+          <div className="md:hidden flex items-center">
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none"
-              aria-label={isMobileMenuOpen ? "关闭菜单" : "打开菜单"}
+              onClick={onToggleMobileMenu}
+              className={`${textColor} hover:text-cyan-400`}
+              aria-label="主菜单"
             >
-              {/* 关键修复：确保三元运算符完整（条件 ? 结果1 : 结果2） */}
-              {isMobileMenuOpen ? <X className="h-6 w-6 flex" /> : <Menu className="h-6 w-6 flex" />}
+              {isMobileMenuOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
             </button>
           </div>
         </div>
@@ -140,53 +72,49 @@ export default function Navbar() {
 
       {/* 移动端导航菜单 */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800">
-          <div className="px-4 py-3 space-y-2">
-            <Link 
-              href="/" 
-              className="flex items-center gap-2 py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
+        <div className="md:hidden bg-gray-800/95 backdrop-blur-md border-t border-blue-500/20">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <Link
+              href="/"
+              onClick={onToggleMobileMenu}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                currentPath === '/' ? activeColor : textColor
+              }`}
             >
-              <Home className="w-5 h-5" />
-              <span>首页</span>
+              首页
             </Link>
-            <Link 
-              href="/favorites" 
-              className="flex items-center gap-2 py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
+            <Link
+              href="/favorites"
+              onClick={onToggleMobileMenu}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                currentPath === '/favorites' ? activeColor : textColor
+              }`}
             >
-              <Bookmark className="w-5 h-5" />
-              <span>收藏</span>
+              收藏
             </Link>
-            <Link 
-              href="/history" 
-              className="flex items-center gap-2 py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
+            <Link
+              href="/history"
+              onClick={onToggleMobileMenu}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                currentPath === '/history' ? activeColor : textColor
+              }`}
             >
-              <History className="w-5 h-5" />
-              <span>历史</span>
+              历史
             </Link>
-            <Link 
-              href="/personal" 
-              className="flex items-center gap-2 py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
+            <Link
+              href="/personal"
+              onClick={onToggleMobileMenu}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                currentPath === '/personal' ? activeColor : textColor
+              }`}
             >
-              <User className="w-5 h-5" />
-              <span>我的</span>
+              我的
             </Link>
-            <button 
-              onClick={() => {
-                handleFeedback();
-                setIsMobileMenuOpen(false);
-              }}
-              className="flex items-center gap-2 py-2 w-full text-left"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span>反馈</span>
-            </button>
           </div>
         </div>
       )}
     </nav>
   );
-}
+};
+
+export default Navbar;

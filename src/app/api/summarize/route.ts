@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { generateAISummary } from '@/lib/ai-service';
 
 // 限流配置
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1分钟
 const MAX_REQUESTS_PER_WINDOW = 10; // 每分钟最多10次请求
-const requestCache = new Map<string, number[]>(); // 存储请求记录
+const requestCache = new Map<string, number[]>();
 
 // 检查限流
 function checkRateLimit(identifier: string): boolean {
@@ -34,38 +34,36 @@ function checkRateLimit(identifier: string): boolean {
   return true;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // 获取客户端IP作为限流标识
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    // 获取客户端IP作为限流标识（修正部分）
+    const ip = request.headers.get('x-forwarded-for') || 
+               request.headers.get('x-real-ip') || 
+               'unknown';
     
     // 检查限流
     if (!checkRateLimit(ip)) {
       return NextResponse.json(
-        { success: false, error: '请求过于频繁，请1分钟后再试' },
+        { error: '请求过于频繁，请稍后再试' },
         { status: 429 }
       );
     }
     
-    const { newsContent } = await request.json();
+    const { content } = await request.json();
     
-    if (!newsContent) {
+    if (!content || typeof content !== 'string') {
       return NextResponse.json(
-        { success: false, error: '缺少新闻内容' },
+        { error: '请提供有效的新闻内容' },
         { status: 400 }
       );
     }
     
-    const summary = await generateAISummary(newsContent);
-    
-    return NextResponse.json({
-      success: true,
-      data: summary
-    });
+    const summary = await generateAISummary(content);
+    return NextResponse.json(summary);
   } catch (error) {
-    console.error('摘要API错误:', error);
+    console.error('摘要生成API错误:', error);
     return NextResponse.json(
-      { success: false, error: '生成摘要失败' },
+      { error: '生成摘要时发生错误' },
       { status: 500 }
     );
   }

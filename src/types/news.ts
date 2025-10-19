@@ -1,21 +1,24 @@
-// src/types/news.ts
+// 新闻项接口定义
 export interface NewsItem {
   id: string;
   title: string;
   content: string;
-  summary: string;
   source: string;
   publishTime: string;
   category: string;
-  imageUrl?: string;
+  summary: string;
   link?: string;
+  imageUrl?: string;
 }
 
-// src/types/ai.ts
-export interface AISummary {
-  summary: string;
-  timeline: string[];
-  knowledgePoints: string[];
-  impact: string;
-  tags: string[];
+// NewsCard组件属性接口
+export interface NewsCardProps {
+  news: NewsItem;
+  index: number;
+  cardClass?: string;
+  titleClass?: string;
+  sourceClass?: string;
+  timeClass?: string;
+  summaryClass?: string;
+  categoryIcon?: React.ReactNode;
 }
