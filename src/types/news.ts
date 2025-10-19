@@ -1,26 +1,15 @@
-// 新闻项接口
 export interface NewsItem {
   id: string;
   title: string;
-  summary?: string;
   content: string;
   source: string;
   publishTime: string;
   category: string;
-  imageUrl?: string;
+  summary: string;
+  link?: string; // 添加 link 属性（可选，使用 ? 标记）
+  imageUrl?: string; // 保留原有的图片URL属性（如果有）
 }
 
-// AI摘要接口
-// src/types/news.ts
-export interface AISummary {
-  summary: string;
-  timeline: string[];
-  knowledgePoints: string[];
-  impact?: string;
-  tags?: string[];
-  error?: string; // 添加error属性，标记为可选
-}
-// API响应接口
 export interface APIResponse<T> {
   success: boolean;
   data?: T;

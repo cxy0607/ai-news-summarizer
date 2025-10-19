@@ -1,150 +1,239 @@
-import * as RSSParser from 'rss-parser';
+export {};
 
-const Parser = RSSParser.default;
-const parser = new Parser();
+import { NewsItem } from '@/types/news';
 
-// 使用更稳定的RSS源
-export const RSS_FEEDS = [
+// 新闻源配置（包含网页地址和解析规则）
+export const NEWS_SOURCES = [
   {
-    name: '央视新闻',
-    url: 'http://rss.cctv.com/rss/news.xml',
-    category: '综合'
+    name: '科技日报',
+    url: 'https://epaper.stdaily.com/statics/technology-site/index.html',
+    backupUrl: 'https://www.stdaily.com/tech/',
+    category: '科技',
+    // HTML解析规则（根据实际网页结构调整）
+    parseRules: {
+      listSelector: '.news-list .article-item', // 新闻列表项选择器
+      titleSelector: 'h3 a, .title a', // 标题选择器
+      linkSelector: 'a', // 链接选择器
+      timeSelector: '.time, .pubdate', // 时间选择器
+      summarySelector: '.summary, .desc' // 摘要选择器
+    }
   },
   {
-    name: '人民网',
-    url: 'http://www.people.com.cn/rss/politics.xml',
-    category: '政治'
+    name: '新华网 - 国内',
+    url: 'http://www.xinhuanet.com/politics/',
+    backupUrl: 'http://www.xinhuanet.com/politics/index.htm',
+    category: '政治',
+    parseRules: {
+      listSelector: '.news-list li, .mod-news-list .item',
+      titleSelector: 'a',
+      linkSelector: 'a',
+      timeSelector: '.time',
+      summarySelector: '.intro'
+    }
   },
   {
-    name: '新华网',
-    url: 'http://www.xinhuanet.com/rss/news.xml',
-    category: '时事'
+    name: '中国环境网',
+    url: 'https://www.cenews.com.cn/hjyw/',
+    backupUrl: 'https://www.envir.gov.cn/mtjj/',
+    category: '环境',
+    parseRules: {
+      listSelector: '.news_list .news_item, .list_news li',
+      titleSelector: 'h3 a, .title a',
+      linkSelector: 'a',
+      timeSelector: '.date',
+      summarySelector: '.content'
+    }
   },
   {
-    name: '科技新闻',
-    url: 'http://rss.cnbeta.com/rss',
-    category: '科技'
+    name: '易车网',
+    url: 'https://news.yiche.com/',
+    backupUrl: 'https://www.autohome.com.cn/news/',
+    category: '汽车',
+    parseRules: {
+      listSelector: '.news-wrap .item, .article-wrapper .article-item',
+      titleSelector: '.title a, h3 a',
+      linkSelector: 'a',
+      timeSelector: '.time',
+      summarySelector: '.desc'
+    }
   }
 ];
 
-// 备用模拟数据
-export function getMockNews() {
+// 模拟新闻数据
+export function getMockNews(): NewsItem[] {
   return [
     {
       id: 'mock-1',
-      title: '人工智能助力教育变革，个性化学习成为可能',
-      content: '近日，教育部联合多家科技企业推出人工智能教育试点项目。该项目利用AI技术分析学生的学习习惯和知识掌握程度，为每个学生生成独一无二的学习路径和推荐内容。专家表示，这将极大提升教学效率，实现真正的因材施教。',
+      title: '人工智能助力教育变革',
+      content: 'AI技术正在重塑教育行业，个性化学习方案让每个学生都能获得定制化教学体验。',
       source: '科技日报',
-      publishTime: '2024-01-15',
+      publishTime: new Date().toISOString().split('T')[0],
       category: '科技',
       summary: 'AI技术正在重塑教育行业，个性化学习方案让每个学生都能获得定制化教学体验。'
     },
-    {
-      id: 'mock-2',
-      title: '量子计算新突破：实现100量子比特稳定运行',
-      content: '我国科研团队在量子计算领域取得重大进展，成功实现了100量子比特的稳定运行，创下世界新纪录。这一突破意味着量子计算机在处理复杂问题时的能力得到质的飞跃。',
-      source: '人民网',
-      publishTime: '2024-01-14',
-      category: '科技',
-      summary: '量子计算机性能再创新高，100量子比特稳定运行为解决复杂科学问题提供新可能。'
-    },
-    {
-      id: 'mock-3',
-      title: '全球气候变化峰会达成新协议，各国承诺加大减排力度',
-      content: '第28届联合国气候变化大会在迪拜闭幕，各国代表经过艰难谈判，最终达成历史性协议。协议要求各国在2030年前将温室气体排放量在2019年基础上减少45%。',
-      source: '新华网',
-      publishTime: '2024-01-13',
-      category: '环境',
-      summary: '气候变化峰会达成历史性协议，各国承诺加大减排力度，共同应对气候危机。'
-    },
-    {
-      id: 'mock-4',
-      title: '新能源汽车销量创新高，市场占有率突破40%',
-      content: '根据最新数据，我国新能源汽车单月销量首次突破100万辆，市场占有率超过40%。这一数据显示消费者对新能源汽车的接受度大幅提升。',
-      source: '经济参考报',
-      publishTime: '2024-01-12',
-      category: '汽车',
-      summary: '新能源汽车销量突破百万大关，市场占有率超40%，显示绿色出行理念深入人心。'
-    },
-    {
-      id: 'mock-5',
-      title: '太空旅游新时代：商业航天公司实现每周发射',
-      content: '随着SpaceX、蓝色起源等商业航天公司的快速发展，太空旅游正进入常态化阶段。目前，主要商业航天公司已实现每周一次的发射频率。',
-      source: '科技新闻网',
-      publishTime: '2024-01-11',
-      category: '航天',
-      summary: '商业航天实现每周发射，太空旅游进入常态化，票价大幅下降让更多人实现太空梦。'
-    },
-    {
-      id: 'mock-6',
-      title: '生物医药突破：新型抗癌药物进入临床试验',
-      content: '我国科研团队研发的新型抗癌药物正式进入临床试验阶段，该药物针对多种实体瘤显示显著疗效。与传统化疗不同，这种新药采用靶向治疗原理。',
-      source: '健康报',
-      publishTime: '2024-01-10',
-      category: '医疗',
-      summary: '新型靶向抗癌药物进入临床试验，精准治疗实体瘤，为癌症患者带来新希望。'
-    }
+    // ... 其他模拟数据
   ];
 }
 
-// 获取RSS新闻（带超时和错误处理）
-export async function fetchRSSNews(): Promise<any[]> {
-  const allNews: any[] = [];
+// 解析HTML内容提取新闻
+function parseHtmlNews(html: string, source: typeof NEWS_SOURCES[0]): { items: any[] } {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const newsItems: any[] = [];
+  const { listSelector, titleSelector, linkSelector, timeSelector, summarySelector } = source.parseRules;
+
+  // 获取新闻列表元素
+  const articleElements = doc.querySelectorAll(listSelector);
   
-  console.log('开始获取RSS新闻...');
-  
-  for (const feed of RSS_FEEDS) {
+  articleElements.forEach((el, index) => {
     try {
-      console.log(`正在获取 ${feed.name} 的新闻...`);
+      // 提取标题
+      const titleEl = el.querySelector(titleSelector);
+      const title = titleEl?.textContent?.trim() || '无标题';
+
+      // 提取链接
+      const linkEl = el.querySelector(linkSelector);
+      let link = linkEl?.getAttribute('href') || '';
+      // 补全相对路径
+      if (link && !link.startsWith('http')) {
+        const baseUrl = new URL(source.url).origin;
+        link = link.startsWith('/') ? `${baseUrl}${link}` : `${baseUrl}/${link}`;
+      }
+
+      // 提取时间
+      const timeEl = el.querySelector(timeSelector);
+      let pubDate = timeEl?.textContent?.trim() || '';
+      // 格式化时间（尝试转换为标准格式）
+      if (pubDate) {
+        try {
+          pubDate = new Date(pubDate).toISOString().split('T')[0];
+        } catch {
+          pubDate = new Date().toISOString().split('T')[0]; // 转换失败用当前时间
+        }
+      } else {
+        pubDate = new Date().toISOString().split('T')[0];
+      }
+
+      // 提取摘要
+      const summaryEl = el.querySelector(summarySelector);
+      const description = summaryEl?.textContent?.trim() || '暂无摘要';
+
+      newsItems.push({ title, link, pubDate, description });
+    } catch (error) {
+      console.error(`解析 ${source.name} 第 ${index} 条新闻失败:`, error);
+    }
+  });
+
+  return { items: newsItems };
+}
+
+// 带重试的HTML请求函数
+async function fetchHtmlWithRetry(source: typeof NEWS_SOURCES[0], retries = 2): Promise<any> {
+  const attemptFetch = async (url: string, remainingRetries: number): Promise<any> => {
+    try {
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}&isHtml=true`;
       
-      // 设置超时
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('请求超时')), 5000)
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error(`请求超时`)), 10000)
       );
-      
-      // 获取RSS数据
-      const fetchPromise = parser.parseURL(feed.url);
-      const feedData = await Promise.race([fetchPromise, timeoutPromise]) as any;
-      
-      // 转换新闻项
-      if (feedData.items && feedData.items.length > 0) {
-        const newsItems = feedData.items.slice(0, 3).map((item: any, index: number) => ({
-          id: `rss-${feed.name}-${Date.now()}-${index}`,
-          title: item.title || '无标题',
-          content: item.contentSnippet || item.summary || item.content || '暂无详细内容',
-          source: feed.name,
-          publishTime: item.pubDate ? new Date(item.pubDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          category: feed.category,
-          summary: (item.contentSnippet || item.summary || '').substring(0, 100) + '...',
+
+      const response = await Promise.race([
+        fetch(proxyUrl, {
+          headers: {
+            'Accept': 'text/html,application/xhtml+xml'
+          }
+        }),
+        timeoutPromise
+      ]);
+
+      if (!response.ok) {
+        throw new Error(`HTTP 错误: ${response.status}`);
+      }
+
+      const html = await response.text();
+      return parseHtmlNews(html, source);
+    } catch (error) {
+      if (remainingRetries > 0) {
+        console.log(`从 ${source.name} 获取失败，剩余重试次数: ${remainingRetries}，重试中...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (3 - remainingRetries)));
+        return attemptFetch(url, remainingRetries - 1);
+      }
+      throw error;
+    }
+  };
+
+  // 尝试主URL → 备用URL
+  try {
+    return await attemptFetch(source.url, retries);
+  } catch (primaryError) {
+    if (source.backupUrl) {
+      console.log(`主URL失败，尝试 ${source.name} 的备用URL...`);
+      return await attemptFetch(source.backupUrl, retries);
+    }
+    throw primaryError;
+  }
+}
+
+// 核心新闻获取函数
+export async function fetchNews(
+  category?: string,
+  page: number = 1,
+  pageSize: number = 6
+): Promise<{ news: NewsItem[], failedSources: string[] }> {
+  const allNews: NewsItem[] = [];
+  const failedSources: string[] = [];
+
+  // 筛选需要请求的新闻源
+  const sourcesToFetch = category 
+    ? NEWS_SOURCES.filter(source => source.category === category)
+    : NEWS_SOURCES;
+
+  for (const source of sourcesToFetch) {
+    try {
+      const { items } = await fetchHtmlWithRetry(source);
+
+      if (items.length > 0) {
+        const newsItems = items.map((item: any, index: number): NewsItem => ({
+          id: `html-${source.name}-${Date.now()}-${index}`,
+          title: item.title,
+          content: item.description,
+          source: source.name,
+          publishTime: item.pubDate,
+          category: source.category,
+          summary: item.description.substring(0, 100) + (item.description.length > 100 ? '...' : ''),
           link: item.link
         }));
-        
+
         allNews.push(...newsItems);
-        console.log(`成功从 ${feed.name} 获取 ${newsItems.length} 条新闻`);
+        console.log(`成功从 ${source.name} 获取 ${newsItems.length} 条新闻`);
       }
-      
     } catch (error) {
-if (error instanceof Error) {
-  console.error(`从 ${feed.name} 获取新闻失败:`, error.message);
-} else {
-  console.error(`从 ${feed.name} 获取新闻失败:`, String(error));
-}
-      // 继续尝试其他源
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`处理 ${source.name} 失败:`, errorMsg);
+      failedSources.push(source.name);
       continue;
     }
   }
-  
-  console.log(`总共获取到 ${allNews.length} 条真实新闻`);
-  
-  // 如果真实新闻太少，补充模拟数据
-  if (allNews.length < 3) {
-    console.log('真实新闻数量不足，补充模拟数据');
-    const mockNews = getMockNews();
-    // 去重后合并
-    const existingTitles = new Set(allNews.map(news => news.title));
-    const uniqueMockNews = mockNews.filter(news => !existingTitles.has(news.title));
-    allNews.push(...uniqueMockNews.slice(0, 6 - allNews.length));
+
+  // 补充模拟数据（如果真实数据不足）
+  if (allNews.length < pageSize) {
+    let mockNews = getMockNews();
+    if (category) {
+      mockNews = mockNews.filter(item => item.category === category);
+    }
+    
+    const existingTitles = new Set(allNews.map(item => item.title));
+    const uniqueMockNews = mockNews.filter(item => !existingTitles.has(item.title));
+    allNews.push(...uniqueMockNews);
   }
-  
-  return allNews;
+
+  // 按发布时间排序
+  allNews.sort((a, b) => 
+    new Date(b.publishTime).getTime() - new Date(a.publishTime).getTime()
+  );
+
+  // 分页处理
+  const startIndex = (page - 1) * pageSize;
+  const paginatedNews = allNews.slice(startIndex, startIndex + pageSize);
+
+  return { news: paginatedNews, failedSources };
 }

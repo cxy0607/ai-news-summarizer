@@ -1,76 +1,74 @@
 import { NewsItem } from '@/types/news';
-import Link from 'next/link';
-import { formatDate } from '@/lib/utils';
-import { Clock, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import React from 'react';
 
+// 完整的 NewsCard Props 类型定义（包含所有样式属性）
 interface NewsCardProps {
   news: NewsItem;
   index: number;
+  cardClass?: string;         // 卡片外层容器样式
+  titleClass?: string;        // 标题样式
+  sourceClass?: string;       // 来源文字样式
+  timeClass?: string;         // 时间文字样式
+  summaryClass?: string;      // 摘要文字样式
+  categoryIcon?: React.ReactNode; // 分类图标
 }
 
-export default function NewsCard({ news, index }: NewsCardProps) {
-  // 定义不同的卡片颜色样式
-  const cardStyles = [
-    'from-blue-50 to-indigo-50 border-blue-100',
-    'from-purple-50 to-pink-50 border-purple-100',
-    'from-green-50 to-teal-50 border-green-100',
-  ];
-  
-  // 循环使用样式
-  const getCardStyle = () => cardStyles[index % cardStyles.length];
-
+// 新闻卡片组件
+const NewsCard: React.FC<NewsCardProps> = ({
+  news,
+  index,
+  cardClass = '',
+  titleClass = '',
+  sourceClass = '',
+  timeClass = '',
+  summaryClass = '',
+  categoryIcon
+}) => {
   return (
-    <Link 
-      href={`/news/${news.id}`}
-      className="group"
-      aria-label={`查看新闻: ${news.title}`}
-    >
-      <div className={`glass-card h-full overflow-hidden transition-all duration-300 hover:shadow-lg ${getCardStyle()}`}>
-        {/* 新闻图片（如果有） */}
-        {news.imageUrl && (
-          <div className="h-48 overflow-hidden">
-            <img 
-              src={news.imageUrl} 
-              alt={news.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </div>
-        )}
-        
-        <div className="p-6">
-          {/* 分类标签 */}
-          <span 
-            className="inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full mb-3 font-medium"
-          >
-            {news.category}
-          </span>
-          
-          {/* 标题 */}
-          <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
-            {news.title}
-          </h3>
-          
-          {/* 摘要 */}
-          {news.summary && (
-            <p className="text-gray-600 mb-4 line-clamp-3 text-sm leading-relaxed">
-              {news.summary}
-            </p>
-          )}
-          
-          {/* 底部信息 */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <div className="flex items-center text-gray-500 text-sm">
-              <Clock className="w-4 h-4 mr-1" aria-hidden="true" />
-              <span>{formatDate(news.publishTime)}</span>
-            </div>
-            
-            <div className="flex items-center text-gray-400 text-sm group-hover:text-blue-500 transition-colors">
-              <span>AI解读</span>
-              <Sparkles className="w-4 h-4 ml-1" aria-hidden="true" />
-            </div>
-          </div>
+    <div className={cardClass}>
+      {/* 新闻图片（如有） */}
+      {news.imageUrl && (
+        <div className="h-40 overflow-hidden">
+          <img
+            src={news.imageUrl}
+            alt={news.title}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          />
         </div>
+      )}
+      
+      <div className="p-5">
+        {/* 分类图标 + 来源 + 时间 */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            {categoryIcon}
+            <span className={sourceClass}>{news.source}</span>
+          </div>
+          <span className={timeClass}>{news.publishTime}</span>
+        </div>
+        
+        {/* 新闻标题 */}
+        <h3 className={titleClass}>{news.title}</h3>
+        
+        {/* 新闻摘要 */}
+        <p className={`mt-3 ${summaryClass}`}>{news.summary}</p>
+        
+        {/* 查看详情链接 */}
+        {news.link && (
+          <a
+            href={news.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 mt-4 text-cyan-400 hover:text-cyan-300 text-sm transition-colors"
+          >
+            查看详情
+            <ArrowRight className="w-3 h-3" />
+          </a>
+        )}
       </div>
-    </Link>
+    </div>
   );
-}
+};
+
+export default NewsCard;
