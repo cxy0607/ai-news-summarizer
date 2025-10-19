@@ -1,17 +1,21 @@
+// src/types/news.ts
 export interface NewsItem {
   id: string;
   title: string;
   content: string;
+  summary: string;
   source: string;
   publishTime: string;
   category: string;
-  summary: string;
-  link?: string; // 添加 link 属性（可选，使用 ? 标记）
-  imageUrl?: string; // 保留原有的图片URL属性（如果有）
+  imageUrl?: string;
+  link?: string;
 }
 
-export interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+// src/types/ai.ts
+export interface AISummary {
+  summary: string;
+  timeline: string[];
+  knowledgePoints: string[];
+  impact: string;
+  tags: string[];
 }

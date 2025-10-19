@@ -1,146 +1,192 @@
 // src/components/Navbar.tsx
-import React from 'react';
-import { Cpu, Menu, X } from 'lucide-react';
+'use client';
 
-// 完整的导航栏Props类型定义（支持科技感样式定制）
-interface NavbarProps {
-  /** 自定义外层类名（用于背景、边框等科技感样式） */
-  className?: string;
-  /** 导航链接默认文本颜色（如科技蓝 text-cyan-400） */
-  textColor?: string;
-  /** 导航链接hover/激活态颜色 */
-  activeColor?: string;
-  /** 移动端菜单是否展开（可选，控制响应式交互） */
-  isMobileMenuOpen?: boolean;
-  /** 移动端菜单切换回调（可选，响应式交互） */
-  onToggleMobileMenu?: () => void;
-}
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { 
+  Home, Bookmark, History, User, Menu, X, 
+  MessageSquare, Sun, Moon, Search 
+} from 'lucide-react';
 
-// 导航栏组件（显式标注React函数组件类型，绑定Props）
-const Navbar: React.FC<NavbarProps> = ({
-  className = '',
-  textColor = 'text-blue-300',
-  activeColor = 'text-cyan-400',
-  isMobileMenuOpen = false,
-  onToggleMobileMenu
-}) => {
+export default function Navbar() {
+  const [activePath, setActivePath] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // 初始化路由和暗黑模式状态
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // 同步当前路由
+      setActivePath(window.location.pathname);
+      const handleRouteChange = () => setActivePath(window.location.pathname);
+      window.addEventListener('popstate', handleRouteChange);
+
+      // 同步暗黑模式设置
+      const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+      setDarkMode(savedDarkMode);
+      document.documentElement.classList.toggle('dark', savedDarkMode);
+
+      return () => window.removeEventListener('popstate', handleRouteChange);
+    }
+  }, []);
+
+  // 切换暗黑模式
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    localStorage.setItem('darkMode', newMode.toString());
+    document.documentElement.classList.toggle('dark', newMode);
+  };
+
+  // 反馈功能处理
+  const handleFeedback = () => {
+    alert('反馈功能：请输入您的建议或问题');
+  };
+
+  // 导航项激活样式处理
+  const getNavClass = (path: string) => 
+    activePath === path 
+      ? 'text-blue-600 font-medium' 
+      : 'text-gray-600 hover:text-blue-600 transition-colors';
+
   return (
-    // 外层容器：合并默认样式与自定义className
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${className}`}>
-      {/* 导航栏主体：科技感玻璃拟态 + 边框 */}
-      <div className="bg-gray-900/80 backdrop-blur-lg border-b border-blue-500/20 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* 左侧Logo区域（科技感图标+文字） */}
-          <div className="flex items-center">
-            <Cpu className="w-8 h-8 text-cyan-400 mr-2 transition-transform hover:rotate-12" />
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-              智汇新闻
-            </span>
+    <nav className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 shadow-sm z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* 左侧：Logo + 核心导航 */}
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center">
+              <span className="text-xl font-bold text-blue-600">智闻快览</span>
+            </Link>
+            
+            {/* 桌面端导航菜单 */}
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/" className={getNavClass('/')}>
+                <div className="flex items-center gap-1.5">
+                  <Home className="w-4 h-4" />
+                  <span>首页</span>
+                </div>
+              </Link>
+              <Link href="/favorites" className={getNavClass('/favorites')}>
+                <div className="flex items-center gap-1.5">
+                  <Bookmark className="w-4 h-4" />
+                  <span>收藏</span>
+                </div>
+              </Link>
+              <Link href="/history" className={getNavClass('/history')}>
+                <div className="flex items-center gap-1.5">
+                  <History className="w-4 h-4" />
+                  <span>历史</span>
+                </div>
+              </Link>
+            </div>
           </div>
 
-          {/* 右侧导航链接（桌面端可见） */}
-          <div className="hidden md:flex items-center gap-8">
-            <NavLink 
-              href="/" 
-              label="首页" 
-              textColor={textColor} 
-              activeColor={activeColor} 
-              isActive={window.location.pathname === '/'}
-            />
-            <NavLink 
-              href="/about" 
-              label="关于" 
-              textColor={textColor} 
-              activeColor={activeColor} 
-              isActive={window.location.pathname === '/about'}
-            />
-            <NavLink 
-              href="/feedback" 
-              label="反馈" 
-              textColor={textColor} 
-              activeColor={activeColor} 
-              isActive={window.location.pathname === '/feedback'}
-            />
-          </div>
-
-          {/* 移动端菜单按钮（仅移动端可见） */}
-          <div className="md:hidden">
+          {/* 右侧：功能按钮区 */}
+          <div className="flex items-center gap-4">
+            {/* 搜索按钮 */}
+            <button 
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="搜索新闻"
+            >
+              <Search className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            </button>
+            
+            {/* 暗黑模式切换 */}
+            <button 
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label={darkMode ? "切换到浅色模式" : "切换到暗黑模式"}
+            >
+              {darkMode ? (
+                <Sun className="w-5 h-5 text-gray-600" />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-600" />
+              )}
+            </button>
+            
+            {/* 反馈按钮（仅桌面显示） */}
+            <button 
+              onClick={handleFeedback}
+              className="hidden md:flex items-center gap-1.5 text-gray-600 hover:text-blue-600 transition-colors"
+              aria-label="反馈建议"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>反馈</span>
+            </button>
+            
+            {/* 个人中心入口 */}
+            <Link 
+              href="/personal" 
+              className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 transition-colors"
+              aria-label="个人中心"
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden md:inline">我的</span>
+            </Link>
+            
+            {/* 移动端菜单按钮 - 修复三元运算符语法 */}
             <button
-              onClick={onToggleMobileMenu}
-              className={`p-2 rounded-md ${textColor} hover:${activeColor} hover:bg-gray-800/50 transition-colors`}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none"
               aria-label={isMobileMenuOpen ? "关闭菜单" : "打开菜单"}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {/* 关键修复：确保三元运算符完整（条件 ? 结果1 : 结果2） */}
+              {isMobileMenuOpen ? <X className="h-6 w-6 flex" /> : <Menu className="h-6 w-6 flex" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* 移动端导航菜单（展开时显示） */}
+      {/* 移动端导航菜单 */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-gray-800/90 backdrop-blur-lg border-b border-blue-500/20 px-4 py-3">
-          <div className="flex flex-col gap-3">
-            <NavLink 
+        <div className="md:hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800">
+          <div className="px-4 py-3 space-y-2">
+            <Link 
               href="/" 
-              label="首页" 
-              textColor={textColor} 
-              activeColor={activeColor} 
-              isActive={window.location.pathname === '/'}
-              onClick={onToggleMobileMenu} // 点击后关闭菜单
-            />
-            <NavLink 
-              href="/about" 
-              label="关于" 
-              textColor={textColor} 
-              activeColor={activeColor} 
-              isActive={window.location.pathname === '/about'}
-              onClick={onToggleMobileMenu}
-            />
-            <NavLink 
-              href="/feedback" 
-              label="反馈" 
-              textColor={textColor} 
-              activeColor={activeColor} 
-              isActive={window.location.pathname === '/feedback'}
-              onClick={onToggleMobileMenu}
-            />
+              className="flex items-center gap-2 py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <Home className="w-5 h-5" />
+              <span>首页</span>
+            </Link>
+            <Link 
+              href="/favorites" 
+              className="flex items-center gap-2 py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <Bookmark className="w-5 h-5" />
+              <span>收藏</span>
+            </Link>
+            <Link 
+              href="/history" 
+              className="flex items-center gap-2 py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <History className="w-5 h-5" />
+              <span>历史</span>
+            </Link>
+            <Link 
+              href="/personal" 
+              className="flex items-center gap-2 py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <User className="w-5 h-5" />
+              <span>我的</span>
+            </Link>
+            <button 
+              onClick={() => {
+                handleFeedback();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center gap-2 py-2 w-full text-left"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span>反馈</span>
+            </button>
           </div>
         </div>
       )}
     </nav>
   );
-};
-
-// 导航链接子组件（复用逻辑，避免重复代码）
-interface NavLinkProps {
-  href: string;
-  label: string;
-  textColor: string;
-  activeColor: string;
-  isActive: boolean;
-  onClick?: () => void;
 }
-
-const NavLink: React.FC<NavLinkProps> = ({
-  href,
-  label,
-  textColor,
-  activeColor,
-  isActive,
-  onClick
-}) => {
-  return (
-    <a
-      href={href}
-      onClick={onClick}
-      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-        isActive ? activeColor : textColor
-      } hover:${activeColor} focus:outline-none focus:ring-2 focus:ring-cyan-500/50`}
-    >
-      {label}
-    </a>
-  );
-};
-
-// 默认导出（与page.tsx的导入方式匹配）
-export default Navbar;
