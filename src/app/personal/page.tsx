@@ -2,13 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { Bookmark, History, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { Bookmark, History, Settings, HelpCircle, LogOut, User, Mail, Calendar } from 'lucide-react';
 import { NewsItem } from '@/types/news';
+import { useAuth } from '@/components/AuthContext';
 
 export default function PersonalPage() {
   const [bookmarkCount, setBookmarkCount] = useState(0);
   const [historyCount, setHistoryCount] = useState(0);
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const router = useRouter();
+
+  // 检查登录状态
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   // 加载统计数据
   useEffect(() => {
@@ -25,6 +36,28 @@ export default function PersonalPage() {
     }
   }, []);
 
+  // 处理登出
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
+  // 如果正在加载或未登录，显示加载状态
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-300/30 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <Navbar />
@@ -33,14 +66,24 @@ export default function PersonalPage() {
         {/* 个人中心标题 */}
         <div className="text-center mb-12">
           <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <img 
-              src="https://picsum.photos/200/200?random=1" 
-              alt="用户头像" 
-              className="w-16 h-16 rounded-full object-cover"
-            />
+            {user.avatar ? (
+              <img 
+                src={user.avatar} 
+                alt="用户头像" 
+                className="w-16 h-16 rounded-full object-cover"
+              />
+            ) : (
+              <User className="w-8 h-8 text-blue-600" />
+            )}
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">我的账户</h1>
-          <p className="text-gray-500 mt-1">管理您的收藏和阅读历史</p>
+          <h1 className="text-2xl font-bold text-gray-800">{user.name}</h1>
+          <p className="text-gray-500 mt-1">{user.email}</p>
+          <div className="flex items-center justify-center gap-4 mt-2 text-sm text-gray-400">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <span>注册时间: {new Date().toLocaleDateString()}</span>
+            </div>
+          </div>
         </div>
 
         {/* 功能入口列表 */}
@@ -114,6 +157,22 @@ export default function PersonalPage() {
               </div>
             </div>
           </Link>
+
+          {/* 登出按钮 */}
+          <button
+            onClick={handleLogout}
+            className="w-full bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl p-6 transition-colors"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                <LogOut className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-medium text-red-900">退出登录</h3>
+                <p className="text-sm text-red-500 mt-0.5">安全退出当前账户</p>
+              </div>
+            </div>
+          </button>
         </div>
       </div>
     </div>

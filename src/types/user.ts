@@ -1,4 +1,12 @@
 // src/types/user.ts
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  preferences: UserPreferences;
+}
+
 export interface UserPreferences {
   darkMode: boolean;
   subscriptions: string[]; // 订阅的分类列表
@@ -7,4 +15,25 @@ export interface UserPreferences {
 export interface Subscription {
   category: string;
   enabled: boolean;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterCredentials {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (credentials: RegisterCredentials) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
 }

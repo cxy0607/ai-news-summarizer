@@ -1,3 +1,5 @@
+import { AISummary } from '@/types/ai';
+
 // 新闻项接口定义
 export interface NewsItem {
   id: string;
@@ -9,6 +11,14 @@ export interface NewsItem {
   summary: string;
   link?: string;
   imageUrl?: string;
+  // 新增视频支持
+  videoUrl?: string;
+  videoThumbnail?: string;
+  videoDuration?: string;
+  hasVideo?: boolean;
+  mediaType?: 'image' | 'video' | 'text'; // 媒体类型
+  // 新增AI解读相关字段
+  aiSummary?: AISummary;
 }
 
 // NewsCard组件属性接口
@@ -21,4 +31,7 @@ export interface NewsCardProps {
   timeClass?: string;
   summaryClass?: string;
   categoryIcon?: React.ReactNode;
+  // 新增AI解读相关属性
+  showAISummary?: boolean;
+  onAISummaryClick?: (newsId: string) => void;
 }

@@ -1,20 +1,23 @@
-'use client'; // 关键：添加客户端组件标记，必须放在文件第一行
+'use client';
 
-// 补充缺失的导入
 import { useState, useEffect } from 'react';
-import { AlertCircle, Search, X, Filter, ArrowRight } from 'lucide-react';
+import { AlertCircle, Search, X, Filter, LogIn } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import NewsCard from '@/components/NewsCard';
+import AISummaryModal from '@/components/AISummaryModal';
 import ParticleBackground from '@/components/ParticleBackground';
-import CategoryIcon from '@/components/CategoryIcon'; // 修正导入方式为默认导入
-import { fetchNews } from '@/lib/rss-service';
+import CategoryIcon from '@/components/CategoryIcon';
+// 改为调用后端接口获取新闻，避免浏览器端跨域/解析失败
 import { getMockNews } from '@/lib/mock-data';
 import { NewsItem } from '@/types/news';
+import { AISummary } from '@/types/ai';
+import { useAuth } from '@/components/AuthContext';
+import { generateAISummary } from '@/lib/ai-service';
+import Link from 'next/link';
 
-// 假设的分类数据
+// 分类数据
 const categories = ['科技', '环境', '汽车', '健康', '娱乐', '体育', '财经'];
 
-// 主页面组件
 export default function HomePage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -25,6 +28,78 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [isNavbarMobileOpen, setIsNavbarMobileOpen] = useState<boolean>(false);
 
+  // AI解读相关状态
+  const [aiSummaryModal, setAiSummaryModal] = useState<{
+    isOpen: boolean;
+    newsId: string;
+    newsTitle: string;
+  }>({
+    isOpen: false,
+    newsId: '',
+    newsTitle: ''
+  });
+  const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // 认证状态
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // 处理AI解读点击
+  const handleAISummaryClick = async (newsId: string) => {
+    const newsItem = news.find(item => item.id === newsId);
+    if (!newsItem) return;
+
+    setAiSummaryModal({
+      isOpen: true,
+      newsId,
+      newsTitle: newsItem.title
+    });
+
+    // 如果已有AI摘要，直接显示
+    if (newsItem.aiSummary) {
+      setAiSummary(newsItem.aiSummary);
+      return;
+    }
+
+    // 生成AI摘要
+    setAiLoading(true);
+    try {
+      const summary = await generateAISummary(newsItem.content);
+      setAiSummary(summary);
+      
+      // 更新新闻项中的AI摘要
+      setNews(prevNews => 
+        prevNews.map(item => 
+          item.id === newsId 
+            ? { ...item, aiSummary: summary }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('AI摘要生成失败:', error);
+      setAiSummary({
+        summary: '抱歉，AI服务暂时不可用',
+        timeline: [],
+        knowledgePoints: [],
+        impact: '',
+        tags: [],
+        error: 'AI服务暂时不可用，请稍后再试'
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // 关闭AI解读弹窗
+  const closeAISummaryModal = () => {
+    setAiSummaryModal({
+      isOpen: false,
+      newsId: '',
+      newsTitle: ''
+    });
+    setAiSummary(null);
+  };
+
   // 加载新闻数据
   useEffect(() => {
     const loadNews = async () => {
@@ -33,22 +108,29 @@ export default function HomePage() {
         setError(null);
         setFailedSources([]);
         
-        const { news: fetchedNews, failedSources: sources } = await fetchNews(
-          activeCategory ?? undefined,
-          1,
-          12
-        );
+        const params = new URLSearchParams();
+        if (activeCategory) params.set('category', activeCategory);
+        params.set('page', '1');
+        params.set('pageSize', '12');
+
+        const res = await fetch(`/api/news?${params.toString()}`);
+        if (!res.ok) {
+          throw new Error(`API 响应错误: ${res.status}`);
+        }
+        const json = await res.json();
+        const fetchedNews: NewsItem[] = json?.data ?? [];
+        const sources: string[] = json?.failedSources ?? [];
         
         const finalNews = fetchedNews.length > 0 
           ? fetchedNews 
-          : getMockNews().filter(item => !activeCategory || item.category === activeCategory);
+          : getMockNews(12).filter(item => !activeCategory || item.category === activeCategory);
         
         setNews(finalNews);
         setFailedSources(sources);
       } catch (err) {
         console.error('加载新闻失败:', err);
         setNews(
-          getMockNews().filter(item => !activeCategory || item.category === activeCategory)
+          getMockNews(12).filter(item => !activeCategory || item.category === activeCategory)
         );
         setError('部分新闻源加载失败，已显示可用新闻');
       } finally {
@@ -58,7 +140,6 @@ export default function HomePage() {
 
     loadNews();
   }, [activeCategory]);
-
 
   // 从URL参数初始化分类
   useEffect(() => {
@@ -112,8 +193,25 @@ export default function HomePage() {
             智能新闻聚合平台
           </h1>
           <p className="mt-2 text-gray-400">实时抓取全网科技、环境、汽车等领域新闻</p>
+          
+          {/* 登录提示 */}
+          {!isAuthenticated && !authLoading && (
+            <div className="mt-6 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg max-w-md mx-auto">
+              <p className="text-blue-300 text-sm mb-3">
+                登录后可享受个性化推荐和收藏功能
+              </p>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+              >
+                <LogIn className="w-4 h-4" />
+                立即登录
+              </Link>
+            </div>
+          )}
         </div>
 
+        {/* 失败源提示 */}
         {failedSources.length > 0 && (
           <div className="bg-blue-900/30 border border-blue-500/30 text-blue-300 px-4 py-3 rounded-lg mb-6 flex items-start backdrop-blur-sm">
             <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-cyan-400" />
@@ -125,11 +223,11 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* 搜索框 */}
         <div className="relative max-w-2xl mx-auto mb-8">
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur-md"></div>
           <div className="relative bg-gray-800/80 backdrop-blur-md border border-blue-500/20 rounded-xl">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400 w-5 h-5" />
-
             <input
               type="text"
               placeholder="搜索新闻标题或内容..."
@@ -150,6 +248,7 @@ export default function HomePage() {
           </div>
         </div>
         
+        {/* 移动端分类筛选 */}
         <div className="md:hidden mb-6">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -161,7 +260,6 @@ export default function HomePage() {
             </span>
           </button>
 
-          
           {mobileMenuOpen && (
             <div className="mt-2 bg-gray-800/80 backdrop-blur-md border border-blue-500/20 rounded-lg p-2">
               {categories.map((category) => (
@@ -182,6 +280,7 @@ export default function HomePage() {
           )}
         </div>
         
+        {/* 桌面端分类筛选 */}
         <div className="hidden md:flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => handleCategoryChange('')}
@@ -195,7 +294,6 @@ export default function HomePage() {
             全部
           </button>
 
-          
           {categories.map((category) => (
             <button
               key={category}
@@ -212,6 +310,7 @@ export default function HomePage() {
           ))}
         </div>
         
+        {/* 新闻内容 */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
@@ -225,7 +324,6 @@ export default function HomePage() {
                   <div className="h-4 bg-gray-700/50 rounded w-full mb-2"></div>
                   <div className="h-4 bg-gray-700/50 rounded w-full mb-2"></div>
                   <div className="h-4 bg-gray-700/50 rounded w-2/3"></div>
-
                   <div className="mt-4 h-4 bg-gray-700/50 rounded w-1/4"></div>
                 </div>
               </div>
@@ -240,15 +338,26 @@ export default function HomePage() {
             <button
               onClick={() => {
                 setLoading(true);
-                fetchNews(activeCategory ?? undefined, 1, 12).then(({ news, failedSources }) => {
-                  setNews(news.length > 0 ? news : getMockNews());
-                  setFailedSources(failedSources);
-                  setError(null);
-                }).catch(() => {
-                  setError('仍然无法加载，请稍后再试');
-                }).finally(() => {
-                  setLoading(false);
-                });
+                const params = new URLSearchParams();
+                if (activeCategory) params.set('category', activeCategory);
+                params.set('page', '1');
+                params.set('pageSize', '12');
+                fetch(`/api/news?${params.toString()}`)
+                  .then(async (res) => {
+                    if (!res.ok) throw new Error('请求失败');
+                    const json = await res.json();
+                    const fetchedNews: NewsItem[] = json?.data ?? [];
+                    const sources: string[] = json?.failedSources ?? [];
+                    setNews(fetchedNews.length > 0 ? fetchedNews : getMockNews(12));
+                    setFailedSources(sources);
+                    setError(null);
+                  })
+                  .catch(() => {
+                    setError('仍然无法加载，请稍后再试');
+                  })
+                  .finally(() => {
+                    setLoading(false);
+                  });
               }}
               className="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity"
             >
@@ -268,6 +377,8 @@ export default function HomePage() {
                 timeClass="text-gray-500 text-xs"
                 summaryClass="text-gray-300 line-clamp-3"
                 categoryIcon={<CategoryIcon category={item.category} />}
+                showAISummary={true}
+                onAISummaryClick={handleAISummaryClick}
               />
             ))}
           </div>
