@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowRight, Play, Pause, Volume2, VolumeX, Brain, Clock, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Play, Pause, Volume2, VolumeX, Brain, Clock, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { NewsItem, NewsCardProps } from '@/types/news';
 
@@ -18,6 +18,17 @@ const NewsCard: React.FC<NewsCardProps> = ({
 }) => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  // 检查是否已收藏
+  useEffect(() => {
+    try {
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      setIsFavorited(favorites.some((item: NewsItem) => item.id === news.id));
+    } catch (error) {
+      console.error('检查收藏状态失败:', error);
+    }
+  }, [news.id]);
 
   const handleVideoPlay = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -30,6 +41,41 @@ const NewsCard: React.FC<NewsCardProps> = ({
     e.stopPropagation();
     if (onAISummaryClick) {
       onAISummaryClick(news.id);
+    }
+  };
+
+  // 处理收藏/取消收藏
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      
+      if (isFavorited) {
+        // 取消收藏
+        const updatedFavorites = favorites.filter((item: NewsItem) => item.id !== news.id);
+        localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+        setIsFavorited(false);
+      } else {
+        // 添加收藏
+        const updatedFavorites = [news, ...favorites];
+        localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+        setIsFavorited(true);
+      }
+    } catch (error) {
+      console.error('收藏操作失败:', error);
+    }
+  };
+
+  // 添加到历史记录
+  const addToHistory = () => {
+    try {
+      const history = JSON.parse(localStorage.getItem('readingHistory') || '[]');
+      const newHistory = [news, ...history.filter((item: NewsItem) => item.id !== news.id)].slice(0, 50);
+      localStorage.setItem('readingHistory', JSON.stringify(newHistory));
+    } catch (error) {
+      console.error('添加到历史记录失败:', error);
     }
   };
 
@@ -120,6 +166,21 @@ const NewsCard: React.FC<NewsCardProps> = ({
             </span>
           ) : null}
         </div>
+
+        {/* 收藏按钮 */}
+        <div className="absolute top-2 right-2">
+          <button
+            onClick={handleFavoriteClick}
+            className={`p-2 rounded-lg transition-colors ${
+              isFavorited 
+                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
+                : 'bg-black/50 text-gray-300 hover:bg-red-500/20 hover:text-red-400'
+            }`}
+            title={isFavorited ? '取消收藏' : '添加收藏'}
+          >
+            <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
+          </button>
+        </div>
       </div>
       
       <div className="p-5">
@@ -164,6 +225,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
         {/* 查看详情链接 */}
         <Link 
           href={`/news/${news.id}`}
+          onClick={addToHistory}
           className="inline-flex items-center gap-1 mt-4 text-cyan-400 hover:text-cyan-300 text-sm transition-colors"
         >
           查看详情

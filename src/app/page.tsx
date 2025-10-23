@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertCircle, Search, X, Filter, LogIn } from 'lucide-react';
+import { AlertCircle, Search, X, Filter, LogIn, Brain, Play, Heart } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import NewsCard from '@/components/NewsCard';
 import AISummaryModal from '@/components/AISummaryModal';
 import ParticleBackground from '@/components/ParticleBackground';
 import CategoryIcon from '@/components/CategoryIcon';
-// 改为调用后端接口获取新闻，避免浏览器端跨域/解析失败
+import FloatingActionButton from '@/components/FloatingActionButton';
 import { getMockNews } from '@/lib/mock-data';
 import { NewsItem } from '@/types/news';
 import { AISummary } from '@/types/ai';
@@ -27,6 +27,7 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [isNavbarMobileOpen, setIsNavbarMobileOpen] = useState<boolean>(false);
+  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('dark');
 
   // AI解读相关状态
   const [aiSummaryModal, setAiSummaryModal] = useState<{
@@ -43,6 +44,134 @@ export default function HomePage() {
 
   // 认证状态
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // 监听主题变化
+  useEffect(() => {
+    const handleThemeChange = (event: CustomEvent) => {
+      const theme = event.detail;
+      if (theme === 'system') {
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        setCurrentTheme(systemTheme);
+      } else {
+        setCurrentTheme(theme);
+      }
+    };
+
+    window.addEventListener('themechange', handleThemeChange as EventListener);
+    
+    // 初始化主题
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      setCurrentTheme(systemTheme);
+    } else if (savedTheme === 'light') {
+      setCurrentTheme('light');
+    } else {
+      setCurrentTheme('dark');
+    }
+
+    return () => {
+      window.removeEventListener('themechange', handleThemeChange as EventListener);
+    };
+  }, []);
+
+  // 加载新闻数据（带缓存）
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        setFailedSources([]);
+        
+        // 检查缓存
+        const cacheKey = `news_${activeCategory || 'all'}`;
+        const cachedData = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+        const now = Date.now();
+        
+        // 如果缓存存在且未过期（5分钟），直接使用缓存
+        if (cachedData && cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+          const cached = JSON.parse(cachedData);
+          setNews(cached.news);
+          setFailedSources(cached.failedSources);
+          setLoading(false);
+          return;
+        }
+        
+        const params = new URLSearchParams();
+        if (activeCategory) params.set('category', activeCategory);
+        params.set('page', '1');
+        params.set('pageSize', '12');
+
+        const res = await fetch(`/api/news?${params.toString()}`);
+        if (!res.ok) {
+          throw new Error(`API 响应错误: ${res.status}`);
+        }
+        const json = await res.json();
+        const fetchedNews: NewsItem[] = json?.data ?? [];
+        const sources: string[] = json?.failedSources ?? [];
+        
+        const finalNews = fetchedNews.length > 0 
+          ? fetchedNews 
+          : getMockNews(12).filter(item => !activeCategory || item.category === activeCategory);
+        
+        // 缓存数据
+        localStorage.setItem(cacheKey, JSON.stringify({
+          news: finalNews,
+          failedSources: sources
+        }));
+        localStorage.setItem(`${cacheKey}_time`, now.toString());
+        
+        setNews(finalNews);
+        setFailedSources(sources);
+      } catch (err) {
+        console.error('加载新闻失败:', err);
+        setNews(
+          getMockNews(12).filter(item => !activeCategory || item.category === activeCategory)
+        );
+        setError('部分新闻源加载失败，已显示可用新闻');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNews();
+  }, [activeCategory]);
+
+  // 从URL参数初始化分类
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const category = params.get('category');
+      if (category && categories.includes(category)) {
+        setActiveCategory(category);
+      }
+    }
+  }, []);
+
+  // 搜索+分类筛选逻辑
+  const filteredNews = news.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !activeCategory || item.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // 切换分类（更新URL参数）
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(prev => prev === category ? null : category);
+    setMobileMenuOpen(false);
+    
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (activeCategory === category) {
+        params.delete('category');
+      } else {
+        params.set('category', category);
+      }
+      window.history.pushState({}, '', `/?${params.toString()}`);
+    }
+  };
 
   // 处理AI解读点击
   const handleAISummaryClick = async (newsId: string) => {
@@ -100,84 +229,8 @@ export default function HomePage() {
     setAiSummary(null);
   };
 
-  // 加载新闻数据
-  useEffect(() => {
-    const loadNews = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        setFailedSources([]);
-        
-        const params = new URLSearchParams();
-        if (activeCategory) params.set('category', activeCategory);
-        params.set('page', '1');
-        params.set('pageSize', '12');
-
-        const res = await fetch(`/api/news?${params.toString()}`);
-        if (!res.ok) {
-          throw new Error(`API 响应错误: ${res.status}`);
-        }
-        const json = await res.json();
-        const fetchedNews: NewsItem[] = json?.data ?? [];
-        const sources: string[] = json?.failedSources ?? [];
-        
-        const finalNews = fetchedNews.length > 0 
-          ? fetchedNews 
-          : getMockNews(12).filter(item => !activeCategory || item.category === activeCategory);
-        
-        setNews(finalNews);
-        setFailedSources(sources);
-      } catch (err) {
-        console.error('加载新闻失败:', err);
-        setNews(
-          getMockNews(12).filter(item => !activeCategory || item.category === activeCategory)
-        );
-        setError('部分新闻源加载失败，已显示可用新闻');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadNews();
-  }, [activeCategory]);
-
-  // 从URL参数初始化分类
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const category = params.get('category');
-      if (category && categories.includes(category)) {
-        setActiveCategory(category);
-      }
-    }
-  }, []);
-
-  // 搜索+分类筛选逻辑
-  const filteredNews = news.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !activeCategory || item.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  // 切换分类（更新URL参数）
-  const handleCategoryChange = (category: string) => {
-    setActiveCategory(prev => prev === category ? null : category);
-    setMobileMenuOpen(false);
-    
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (activeCategory === category) {
-        params.delete('category');
-      } else {
-        params.set('category', category);
-      }
-      window.history.pushState({}, '', `/?${params.toString()}`);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-900 dark:bg-gray-50 text-gray-100 dark:text-gray-900 overflow-x-hidden transition-colors duration-300">
       <ParticleBackground />
       
       <Navbar 
@@ -188,37 +241,85 @@ export default function HomePage() {
       />
       
       <main className="max-w-7xl mx-auto px-4 py-8 pt-24 relative z-10">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">
-            智能新闻聚合平台
-          </h1>
-          <p className="mt-2 text-gray-400">实时抓取全网科技、环境、汽车等领域新闻</p>
+        <div className="text-center mb-12 relative">
+          {/* 背景装饰 */}
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-3xl blur-3xl"></div>
           
-          {/* 登录提示 */}
-          {!isAuthenticated && !authLoading && (
-            <div className="mt-6 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg max-w-md mx-auto">
-              <p className="text-blue-300 text-sm mb-3">
-                登录后可享受个性化推荐和收藏功能
-              </p>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity"
-              >
-                <LogIn className="w-4 h-4" />
-                立即登录
-              </Link>
+          <div className="relative z-10">
+            <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-pulse mb-4">
+              智能新闻聚合平台
+            </h1>
+            <p className="text-xl text-gray-300 dark:text-gray-600 mb-6">实时抓取全网科技、环境、汽车等领域新闻</p>
+            
+            {/* 统计信息 */}
+            <div className="flex justify-center gap-8 text-sm text-gray-400 dark:text-gray-500 mb-8">
+              <div className="flex items-center gap-2 bg-gray-800/50 dark:bg-gray-200/50 px-4 py-2 rounded-full backdrop-blur-sm">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span>实时更新</span>
+              </div>
+              <div className="flex items-center gap-2 bg-gray-800/50 dark:bg-gray-200/50 px-4 py-2 rounded-full backdrop-blur-sm">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span>AI解读</span>
+              </div>
+              <div className="flex items-center gap-2 bg-gray-800/50 dark:bg-gray-200/50 px-4 py-2 rounded-full backdrop-blur-sm">
+                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                <span>多媒体支持</span>
+              </div>
             </div>
-          )}
+
+            {/* 特色功能展示 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              <div className="bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-sm border border-blue-500/20 dark:border-blue-500/20 rounded-xl p-4 hover:bg-gray-800/60 dark:hover:bg-gray-200/60 transition-all">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-white dark:text-gray-900 font-semibold mb-1">AI智能解读</h3>
+                <p className="text-gray-400 dark:text-gray-600 text-sm">每条新闻都有AI深度分析</p>
+              </div>
+              
+              <div className="bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-sm border border-green-500/20 dark:border-green-500/20 rounded-xl p-4 hover:bg-gray-800/60 dark:hover:bg-gray-200/60 transition-all">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Play className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-white dark:text-gray-900 font-semibold mb-1">多媒体内容</h3>
+                <p className="text-gray-400 dark:text-gray-600 text-sm">支持视频、图片丰富展示</p>
+              </div>
+              
+              <div className="bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-sm border border-purple-500/20 dark:border-purple-500/20 rounded-xl p-4 hover:bg-gray-800/60 dark:hover:bg-gray-200/60 transition-all">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Heart className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-white dark:text-gray-900 font-semibold mb-1">个性化收藏</h3>
+                <p className="text-gray-400 dark:text-gray-600 text-sm">收藏喜欢的新闻内容</p>
+              </div>
+            </div>
+          </div>
         </div>
+          
+        {/* 登录提示 */}
+        {!isAuthenticated && !authLoading && (
+          <div className="mt-6 p-4 bg-blue-900/30 dark:bg-blue-100/30 border border-blue-500/30 dark:border-blue-500/30 rounded-lg max-w-md mx-auto">
+            <p className="text-blue-300 dark:text-blue-700 text-sm mb-3">
+              登录后可享受个性化推荐和收藏功能
+            </p>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              <LogIn className="w-4 h-4" />
+              立即登录
+            </Link>
+          </div>
+        )}
 
         {/* 失败源提示 */}
         {failedSources.length > 0 && (
-          <div className="bg-blue-900/30 border border-blue-500/30 text-blue-300 px-4 py-3 rounded-lg mb-6 flex items-start backdrop-blur-sm">
+          <div className="bg-blue-900/30 dark:bg-blue-100/30 border border-blue-500/30 dark:border-blue-500/30 text-blue-300 dark:text-blue-700 px-4 py-3 rounded-lg mb-6 flex items-start backdrop-blur-sm">
             <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-cyan-400" />
             <div className="text-sm">
               <p className="font-medium">部分新闻源暂时无法访问:</p>
               <p className="mt-1">{failedSources.join(', ')}</p>
-              <p className="mt-1 text-cyan-300">已为您切换到备用新闻源</p>
+              <p className="mt-1 text-cyan-300 dark:text-cyan-600">已为您切换到备用新闻源</p>
             </div>
           </div>
         )}
@@ -226,14 +327,14 @@ export default function HomePage() {
         {/* 搜索框 */}
         <div className="relative max-w-2xl mx-auto mb-8">
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur-md"></div>
-          <div className="relative bg-gray-800/80 backdrop-blur-md border border-blue-500/20 rounded-xl">
+          <div className="relative bg-gray-800/80 dark:bg-gray-200/80 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400 w-5 h-5" />
             <input
               type="text"
               placeholder="搜索新闻标题或内容..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-cyan-400 text-gray-200 placeholder-gray-400"
+              className="w-full pl-10 pr-10 py-3 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-cyan-400 text-gray-200 dark:text-gray-800 placeholder-gray-400 dark:placeholder-gray-500"
               aria-label="搜索新闻"
             />
             {searchTerm && (
@@ -252,7 +353,7 @@ export default function HomePage() {
         <div className="md:hidden mb-6">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex items-center gap-2 px-4 py-3 bg-gray-800/80 backdrop-blur-md border border-blue-500/20 rounded-lg w-full justify-between hover:bg-gray-700/80 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 bg-gray-800/80 dark:bg-gray-200/80 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-lg w-full justify-between hover:bg-gray-700/80 dark:hover:bg-gray-100/80 transition-colors"
           >
             <span className="flex items-center gap-1.5">
               <Filter className="w-4 h-4 text-cyan-400" />
@@ -261,15 +362,15 @@ export default function HomePage() {
           </button>
 
           {mobileMenuOpen && (
-            <div className="mt-2 bg-gray-800/80 backdrop-blur-md border border-blue-500/20 rounded-lg p-2">
+            <div className="mt-2 bg-gray-800/80 dark:bg-gray-200/80 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-lg p-2">
               {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryChange(category)}
                   className={`w-full text-left px-3 py-2.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
                     activeCategory === category
-                      ? 'bg-blue-900/30 text-cyan-400 border-l-2 border-cyan-400'
-                      : 'text-gray-300 hover:bg-gray-700/50'
+                      ? 'bg-blue-900/30 dark:bg-blue-100/30 text-cyan-400 border-l-2 border-cyan-400'
+                      : 'text-gray-300 dark:text-gray-700 hover:bg-gray-700/50 dark:hover:bg-gray-100/50'
                   }`}
                 >
                   <CategoryIcon category={category} />
@@ -287,7 +388,7 @@ export default function HomePage() {
             className={`px-4 py-2.5 rounded-lg text-sm whitespace-nowrap flex items-center gap-1.5 transition-all ${
               !activeCategory
                 ? 'bg-gradient-to-r from-cyan-500/80 to-blue-600/80 text-white shadow-lg shadow-blue-500/20'
-                : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/60 border border-gray-700'
+                : 'bg-gray-800/60 dark:bg-gray-200/60 text-gray-300 dark:text-gray-700 hover:bg-gray-700/60 dark:hover:bg-gray-100/60 border border-gray-700 dark:border-gray-300'
             }`}
           >
             <Filter className="w-4 h-4" />
@@ -301,7 +402,7 @@ export default function HomePage() {
               className={`px-4 py-2.5 rounded-lg text-sm whitespace-nowrap flex items-center gap-1.5 transition-all ${
                 activeCategory === category
                   ? 'bg-gradient-to-r from-cyan-500/80 to-blue-600/80 text-white shadow-lg shadow-blue-500/20'
-                  : 'bg-gray-800/60 text-gray-300 hover:bg-gray-700/60 border border-gray-700'
+                  : 'bg-gray-800/60 dark:bg-gray-200/60 text-gray-300 dark:text-gray-700 hover:bg-gray-700/60 dark:hover:bg-gray-100/60 border border-gray-700 dark:border-gray-300'
               }`}
             >
               <CategoryIcon category={category} />
@@ -316,7 +417,7 @@ export default function HomePage() {
             {[...Array(6)].map((_, i) => (
               <div 
                 key={i} 
-                className="bg-gray-800/60 backdrop-blur-md border border-blue-500/20 rounded-xl overflow-hidden shadow-lg shadow-blue-900/10 animate-pulse"
+                className="bg-gray-800/60 dark:bg-gray-200/60 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl overflow-hidden shadow-lg shadow-blue-900/10 animate-pulse"
               >
                 <div className="h-40 bg-gradient-to-r from-gray-700/50 to-gray-600/50"></div>
                 <div className="p-5">
@@ -330,11 +431,11 @@ export default function HomePage() {
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-16 bg-gray-800/40 backdrop-blur-md border border-blue-500/20 rounded-xl shadow-lg">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-900/30 text-cyan-400 mb-4">
+          <div className="text-center py-16 bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl shadow-lg">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-900/30 dark:bg-blue-100/30 text-cyan-400 mb-4">
               <X className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-semibold text-cyan-300 mb-2">{error}</h2>
+            <h2 className="text-xl font-semibold text-cyan-300 dark:text-cyan-600 mb-2">{error}</h2>
             <button
               onClick={() => {
                 setLoading(true);
@@ -371,11 +472,11 @@ export default function HomePage() {
                 key={item.id}
                 news={item}
                 index={index}
-                cardClass="bg-gray-800/60 backdrop-blur-md border border-blue-500/20 rounded-xl overflow-hidden shadow-lg hover:shadow-blue-900/20 transition-shadow"
-                titleClass="text-xl font-bold text-white hover:text-cyan-400 transition-colors"
-                sourceClass="text-gray-400 text-sm"
-                timeClass="text-gray-500 text-xs"
-                summaryClass="text-gray-300 line-clamp-3"
+                cardClass="bg-gray-800/60 dark:bg-gray-200/60 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl overflow-hidden shadow-lg hover:shadow-blue-900/20 dark:hover:shadow-blue-100/20 transition-shadow"
+                titleClass="text-xl font-bold text-white dark:text-gray-900 hover:text-cyan-400 transition-colors"
+                sourceClass="text-gray-400 dark:text-gray-600 text-sm"
+                timeClass="text-gray-500 dark:text-gray-500 text-xs"
+                summaryClass="text-gray-300 dark:text-gray-700 line-clamp-3"
                 categoryIcon={<CategoryIcon category={item.category} />}
                 showAISummary={true}
                 onAISummaryClick={handleAISummaryClick}
@@ -383,21 +484,33 @@ export default function HomePage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-gray-800/40 backdrop-blur-md border border-blue-500/20 rounded-xl shadow-lg">
-            <p className="text-gray-400">没有找到匹配的新闻</p>
+          <div className="text-center py-16 bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl shadow-lg">
+            <p className="text-gray-400 dark:text-gray-600">没有找到匹配的新闻</p>
             <button
               onClick={() => {
                 setSearchTerm('');
                 setActiveCategory(null);
                 window.history.pushState({}, '', '/');
               }}
-              className="mt-4 px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors"
+              className="mt-4 px-4 py-2 bg-gray-700 dark:bg-gray-300 text-gray-200 dark:text-gray-800 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-200 transition-colors"
             >
               查看全部新闻
             </button>
           </div>
         )}
       </main>
+
+      {/* AI解读弹窗 */}
+      <AISummaryModal
+        isOpen={aiSummaryModal.isOpen}
+        onClose={closeAISummaryModal}
+        aiSummary={aiSummary}
+        newsTitle={aiSummaryModal.newsTitle}
+        isLoading={aiLoading}
+      />
+
+      {/* 浮动操作按钮 */}
+      <FloatingActionButton />
     </div>
   );
 }

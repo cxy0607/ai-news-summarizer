@@ -6,12 +6,15 @@ import Link from 'next/link';
 import { ArrowLeft, Search, Filter } from 'lucide-react';
 import NewsCard from '@/components/NewsCard';
 import { NewsItem } from '@/types/news';
-import { mockNews, categories } from '@/data/news';
+import { getMockNews } from '@/lib/mock-data';
 
 export default function CategoryPage() {
   const params = useParams();
   const categoryName = params.category as string;
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // 获取模拟新闻数据
+  const mockNews = getMockNews(50);
   
   // 过滤新闻
   const filteredNews = mockNews.filter(news => {
@@ -22,6 +25,7 @@ export default function CategoryPage() {
   });
 
   // 检查分类是否存在
+  const categories = ['科技', '环境', '汽车', '健康', '娱乐', '体育', '财经'];
   const categoryExists = categories.includes(categoryName);
 
   if (!categoryExists) {

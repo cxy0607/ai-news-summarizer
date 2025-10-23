@@ -47,10 +47,45 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
+// 生成模拟AI摘要（用于演示）
+function generateMockAISummary(newsContent: string): AISummary {
+  // 提取关键词
+  const keywords = newsContent.match(/[\u4e00-\u9fa5]{2,}/g) || [];
+  const uniqueKeywords = [...new Set(keywords)].slice(0, 5);
+  
+  // 生成时间线
+  const timeline = [
+    "事件发生：相关技术或政策开始实施",
+    "影响扩散：对行业产生初步影响",
+    "未来展望：预计将带来长期变化"
+  ];
+  
+  // 生成知识要点
+  const knowledgePoints = [
+    "技术发展：相关技术正在快速发展",
+    "市场影响：对相关市场产生重要影响",
+    "政策支持：获得政策层面的支持"
+  ];
+  
+  // 生成影响分析
+  const impact = "这一发展将对相关行业产生深远影响，预计将推动技术创新和市场变革，为未来发展奠定重要基础。";
+  
+  // 生成标签
+  const tags = uniqueKeywords.slice(0, 3).concat(["重要新闻", "行业动态"]);
+  
+  return {
+    summary: `这是一条重要的新闻，涉及${uniqueKeywords.slice(0, 2).join('、')}等领域。该事件将对相关行业产生重要影响，值得关注后续发展。`,
+    timeline,
+    knowledgePoints,
+    impact,
+    tags
+  };
+}
+
 // 调用文心大模型生成摘要（带缓存）
 export async function generateAISummary(newsContent: string): Promise<AISummary> {
-  // 生成内容哈希作为缓存键
-  const contentHash = btoa(newsContent.substring(0, 100));
+  // 生成内容哈希作为缓存键（使用安全的编码方式）
+  const contentHash = btoa(encodeURIComponent(newsContent.substring(0, 100)));
   
   // 检查缓存
   const cached = AI_SUMMARY_CACHE.get(contentHash);
@@ -58,10 +93,15 @@ export async function generateAISummary(newsContent: string): Promise<AISummary>
     return cached.data;
   }
 
+  // 如果没有配置百度AI服务，使用模拟摘要
+  if (!process.env.BAIDU_API_KEY || !process.env.BAIDU_SECRET_KEY) {
+    console.log('使用模拟AI摘要服务');
+    const mockSummary = generateMockAISummary(newsContent);
+    AI_SUMMARY_CACHE.set(contentHash, { data: mockSummary, timestamp: Date.now() });
+    return mockSummary;
+  }
+
   try {
-    if (!process.env.BAIDU_API_KEY || !process.env.BAIDU_SECRET_KEY) {
-      throw new Error('AI服务配置不完整');
-    }
 
     if (!newsContent || newsContent.trim().length < 10) {
       throw new Error('新闻内容过短，无法生成摘要');

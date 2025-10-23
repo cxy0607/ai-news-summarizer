@@ -4,7 +4,10 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
+  avatarFile?: File;
   preferences: UserPreferences;
+  joinDate?: string;
+  lastLogin?: string;
 }
 
 export interface UserPreferences {

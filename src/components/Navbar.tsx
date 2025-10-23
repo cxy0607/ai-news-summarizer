@@ -4,6 +4,7 @@ import { Menu, X, User, Bookmark, History, Home, LogIn, LogOut } from 'lucide-re
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
+import ThemeToggle from '@/components/ThemeToggle';
 import { NavbarProps } from '@/types/navbar';
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -24,7 +25,9 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-blue-500/20">
+    // src/components/Navbar.tsx - 第28行修改
+
+<nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 dark:bg-white/80 backdrop-blur-md border-b border-blue-500/20 dark:border-gray-200 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -66,29 +69,32 @@ const Navbar: React.FC<NavbarProps> = ({
               <span>我的</span>
             </Link>
             
-            {/* 登录/登出按钮 */}
-            {isAuthenticated ? (
-              <div className="flex items-center gap-4">
-                <span className="text-gray-300 text-sm">
-                  欢迎，{user?.name}
-                </span>
-                <button
-                  onClick={handleLogout}
+            {/* 主题切换和登录/登出按钮 */}
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              {isAuthenticated ? (
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-300 text-sm">
+                    欢迎，{user?.name}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-1.5 text-gray-300 hover:text-cyan-400 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>登出</span>
+                  </button>
+                </div>
+              ) : (
+                <Link 
+                  href="/login" 
                   className="flex items-center gap-1.5 text-gray-300 hover:text-cyan-400 transition-colors"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>登出</span>
-                </button>
-              </div>
-            ) : (
-              <Link 
-                href="/login" 
-                className="flex items-center gap-1.5 text-gray-300 hover:text-cyan-400 transition-colors"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>登录</span>
-              </Link>
-            )}
+                  <LogIn className="w-4 h-4" />
+                  <span>登录</span>
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* 移动端菜单按钮 */}

@@ -280,20 +280,3 @@ export async function fetchNews(
 
   return { news: paginatedNews, failedSources };
 }
-
-// 获取新闻详情
-export async function getNewsById(id: string): Promise<NewsItem | undefined> {
-  const mockNews = getMockNews();
-  const mockItem = mockNews.find(item => item.id === id);
-  if (mockItem) {
-    return mockItem;
-  }
-
-  try {
-    const { news } = await fetchNews();
-    return news.find(item => item.id === id);
-  } catch (error) {
-    console.error('获取新闻详情失败:', error);
-    return undefined;
-  }
-}
