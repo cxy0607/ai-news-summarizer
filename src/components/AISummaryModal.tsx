@@ -38,6 +38,7 @@ const AISummaryModal: React.FC<AISummaryModalProps> = ({
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            aria-label='关闭弹窗'
           >
             <X className="w-5 h-5 text-gray-400" />
           </button>
