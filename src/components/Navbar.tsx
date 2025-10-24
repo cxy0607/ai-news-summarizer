@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
 import ThemeToggle from '@/components/ThemeToggle';
 import { NavbarProps } from '@/types/navbar';
+// 在现有导入中添加
+import {  usePathname } from 'next/navigation';
+
 
 const Navbar: React.FC<NavbarProps> = ({
   textColor = 'text-gray-800',

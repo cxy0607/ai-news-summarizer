@@ -2,9 +2,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react'; // 移除Monitor图标
 
-type ThemeMode = 'light' | 'dark' | 'system';
+type ThemeMode = 'light' | 'dark'; // 只保留两种模式
 
 const ThemeToggle: React.FC = () => {
   const [theme, setTheme] = useState<ThemeMode>('dark');
@@ -12,6 +12,7 @@ const ThemeToggle: React.FC = () => {
 
   useEffect(() => {
     setMounted(true);
+    // 从本地存储获取主题，默认为深色
     const savedTheme = (localStorage.getItem('theme') as ThemeMode) || 'dark';
     setTheme(savedTheme);
     applyTheme(savedTheme);
@@ -20,25 +21,16 @@ const ThemeToggle: React.FC = () => {
   const applyTheme = (newTheme: ThemeMode) => {
     const root = document.documentElement;
     
-    // 先移除现有的主题类
+    // 移除所有主题类
     root.classList.remove('dark', 'light');
     
-    if (newTheme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      if (systemTheme === 'dark') {
-        root.classList.add('dark');
-      } else {
-        root.classList.add('light');
-      }
-      root.setAttribute('data-theme', systemTheme);
+    // 应用新主题
+    if (newTheme === 'dark') {
+      root.classList.add('dark');
     } else {
-      if (newTheme === 'dark') {
-        root.classList.add('dark');
-      } else {
-        root.classList.add('light');
-      }
-      root.setAttribute('data-theme', newTheme);
+      root.classList.add('light');
     }
+    root.setAttribute('data-theme', newTheme);
   };
 
   const handleThemeChange = (newTheme: ThemeMode) => {
@@ -46,7 +38,7 @@ const ThemeToggle: React.FC = () => {
     localStorage.setItem('theme', newTheme);
     applyTheme(newTheme);
     
-    // 强制重新渲染页面以应用主题
+    // 触发主题变更事件
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('themechange', { detail: newTheme }));
     }
@@ -81,18 +73,6 @@ const ThemeToggle: React.FC = () => {
         >
           <Moon className="w-4 h-4" />
           <span className="hidden sm:inline">深色</span>
-        </button>
-        
-        <button
-          onClick={() => handleThemeChange('system')}
-          className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all ${
-            theme === 'system' 
-              ? 'bg-white text-gray-900 shadow-sm' 
-              : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
-          }`}
-        >
-          <Monitor className="w-4 h-4" />
-          <span className="hidden sm:inline">系统</span>
         </button>
       </div>
     </div>

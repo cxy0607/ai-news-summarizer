@@ -1,13 +1,14 @@
+// src/contexts/ThemeContext.tsx
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark'; // 只保留两种模式
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  actualTheme: 'light' | 'dark';
+  actualTheme: 'light' | 'dark'; // 实际应用的主题（这里和theme一致）
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -23,15 +24,12 @@ export const useTheme = () => {
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('dark');
   const [mounted, setMounted] = useState(false);
+  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark');
 
+  // 实际主题就是当前选择的主题（因为没有系统模式了）
   const getActualTheme = (currentTheme: Theme): 'light' | 'dark' => {
-    if (currentTheme === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
     return currentTheme;
   };
-
-  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
     setMounted(true);

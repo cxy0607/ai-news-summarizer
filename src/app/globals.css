@@ -1,27 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: #e6f4ff; /* 浅色模式背景 */
+  --foreground: #171717; /* 浅色模式文字 */
+  --navbar-bg: rgba(255, 255, 255, 0.8); /* 浅色导航栏背景 */
+  --navbar-border: rgba(0, 0, 0, 0.1); /* 浅色导航栏边框 */
+  --card-bg: rgba(255, 255, 255, 0.7); /* 浅色卡片背景 */
+  --card-border: rgba(0, 0, 0, 0.1); /* 浅色卡片边框 */
+  --highlight: #3b82f6; /* 浅色强调色 */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a; /* 深色模式背景 */
+  --foreground: #ededed; /* 深色模式文字 */
+  --navbar-bg: rgba(10, 10, 10, 0.8); /* 深色导航栏背景 */
+  --navbar-border: rgba(255, 255, 255, 0.1); /* 深色导航栏边框 */
+  --card-bg: rgba(30, 30, 30, 0.7); /* 深色卡片背景 */
+  --card-border: rgba(255, 255, 255, 0.1); /* 深色卡片边框 */
+  --highlight: #60a5fa; /* 深色强调色 */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  /* 添加backdrop-filter支持 */
-  -webkit-backdrop-filter: auto;
-  backdrop-filter: auto;
-  
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 全局容器样式 */
+.min-h-screen {
+  background-color: var(--background) !important;
 }

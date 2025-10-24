@@ -1,8 +1,10 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import React from "react"; // 导入React类型
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,6 +21,7 @@ export const metadata: Metadata = {
   description: "基于AI的智能新闻摘要和个性化推荐平台",
 };
 
+// 明确指定children的类型为React.ReactNode
 export default function RootLayout({
   children,
 }: Readonly<{
