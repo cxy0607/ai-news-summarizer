@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertCircle, Search, X, Filter, LogIn, Brain, Play, Heart } from 'lucide-react';
+import { AlertCircle, Search, X, Filter, LogIn } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import NewsCard from '@/components/NewsCard';
 import AISummaryModal from '@/components/AISummaryModal';
@@ -264,33 +264,6 @@ export default function HomePage() {
               <div className="flex items-center gap-2 bg-gray-800/50 dark:bg-gray-200/50 px-4 py-2 rounded-full backdrop-blur-sm">
                 <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
                 <span>多媒体支持</span>
-              </div>
-            </div>
-
-            {/* 特色功能展示 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <div className="bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-sm border border-blue-500/20 dark:border-blue-500/20 rounded-xl p-4 hover:bg-gray-800/60 dark:hover:bg-gray-200/60 transition-all">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Brain className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-white dark:text-gray-900 font-semibold mb-1">AI智能解读</h3>
-                <p className="text-gray-400 dark:text-gray-600 text-sm">每条新闻都有AI深度分析</p>
-              </div>
-              
-              <div className="bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-sm border border-green-500/20 dark:border-green-500/20 rounded-xl p-4 hover:bg-gray-800/60 dark:hover:bg-gray-200/60 transition-all">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Play className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-white dark:text-gray-900 font-semibold mb-1">多媒体内容</h3>
-                <p className="text-gray-400 dark:text-gray-600 text-sm">支持视频、图片丰富展示</p>
-              </div>
-              
-              <div className="bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-sm border border-purple-500/20 dark:border-purple-500/20 rounded-xl p-4 hover:bg-gray-800/60 dark:hover:bg-gray-200/60 transition-all">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Heart className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-white dark:text-gray-900 font-semibold mb-1">个性化收藏</h3>
-                <p className="text-gray-400 dark:text-gray-600 text-sm">收藏喜欢的新闻内容</p>
               </div>
             </div>
           </div>

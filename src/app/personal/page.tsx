@@ -24,18 +24,27 @@ export default function PersonalPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  // 加载统计数据
+  // src/app/personal/page.tsx - 修改统计数据加载
   useEffect(() => {
     // 获取收藏数量
-    const bookmarks = localStorage.getItem('favorites');
-    if (bookmarks) {
-      setBookmarkCount(JSON.parse(bookmarks).length);
+    const favorites = localStorage.getItem('favorites');
+    if (favorites) {
+      setBookmarkCount(JSON.parse(favorites).length);
     }
 
     // 获取历史记录数量
     const history = localStorage.getItem('readingHistory');
     if (history) {
       setHistoryCount(JSON.parse(history).length);
+    }
+
+    // 获取订阅分类数量（从用户数据中获取）
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      const subscriptionCount = user.preferences?.subscriptions?.length || 0;
+      // 更新订阅分类显示
+      // 这里需要修改显示订阅分类数量的代码
     }
   }, []);
 
@@ -175,7 +184,9 @@ export default function PersonalPage() {
           
           <div className="bg-gray-800/60 backdrop-blur-md border border-purple-500/20 rounded-xl shadow-lg p-6 text-center hover:shadow-purple-900/20 transition-shadow">
             <TrendingUp className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-white">5</div>
+            <div className="text-2xl font-bold text-white">
+              {user?.preferences?.subscriptions?.length || 0}
+            </div>
             <div className="text-gray-400">订阅分类</div>
           </div>
         </div>
