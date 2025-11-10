@@ -32,6 +32,7 @@ export interface RegisterCredentials {
   confirmPassword: string;
 }
 
+// src/types/user.ts
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -39,4 +40,5 @@ export interface AuthContextType {
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  updateUser: (userData: Partial<User>) => Promise<void>; // 新增 updateUser 方法定义
 }

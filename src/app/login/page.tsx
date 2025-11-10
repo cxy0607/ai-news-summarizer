@@ -1,12 +1,10 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react'; // 添加这行导入语句
 import Link from 'next/link';
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useAuth } from '@/components/AuthContext';
 import { LoginCredentials, RegisterCredentials } from '@/types/user';
-
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -14,7 +12,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { login, register, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
   // 如果已经登录，重定向到首页
@@ -39,10 +37,48 @@ export default function LoginPage() {
     setError('');
   };
 
+  const validateForm = (): boolean => {
+    // 邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('请输入有效的邮箱地址');
+      return false;
+    }
+
+    // 密码长度验证
+    if (formData.password.length < 6) {
+      setError('密码长度不能少于6个字符');
+      return false;
+    }
+
+    // 注册时验证密码匹配
+    if (!isLogin) {
+      const registerData = formData as RegisterCredentials;
+      if (registerData.password !== registerData.confirmPassword) {
+        setError('两次输入的密码不匹配');
+        return false;
+      }
+      
+      // 验证姓名不为空
+      if (!registerData.name.trim()) {
+        setError('请输入您的姓名');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
+    // 表单验证
+    if (!validateForm()) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       if (isLogin) {
@@ -53,11 +89,12 @@ export default function LoginPage() {
         router.push('/');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : '登录或注册失败，请重试');
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
@@ -100,6 +137,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold text-white mb-2">
               {isLogin ? '欢迎回来' : '创建账户'}
             </h1>
+
             <p className="text-gray-300">
               {isLogin ? '登录到您的账户' : '开始您的智能新闻之旅'}
             </p>
@@ -167,8 +205,9 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-12 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-                  placeholder="请输入密码"
+                  placeholder="请输入密码（至少6个字符）"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -197,6 +236,7 @@ export default function LoginPage() {
                     placeholder="请再次输入密码"
                     required={!isLogin}
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -212,7 +252,7 @@ export default function LoginPage() {
             {isLogin && (
               <div className="text-right">
                 <Link 
-                  href="#" 
+                  href="/forgot-password" 
                   className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
                 >
                   忘记密码？
@@ -256,16 +296,6 @@ export default function LoginPage() {
               <strong>演示账户：</strong><br />
               邮箱：demo@example.com<br />
               密码：password
-            </p>
-          </div>
-
-          {/* 测试提示 */}
-          <div className="mt-4 p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
-            <p className="text-green-200 text-sm text-center">
-              <strong>测试说明：</strong><br />
-              1. 注册新账户后会自动登录<br />
-              2. 刷新页面后可以正常登录<br />
-              3. 用户数据保存在浏览器本地存储中
             </p>
           </div>
         </div>

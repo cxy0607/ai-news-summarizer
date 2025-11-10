@@ -50,13 +50,13 @@ const ThemeToggle: React.FC = () => {
 
   return (
     <div className="relative">
-      <div className="flex bg-gray-800/60 dark:bg-gray-900/80 backdrop-blur-md border border-gray-600/20 rounded-lg p-1">
+      <div className="flex bg-white/60 dark:bg-[#02183a]/80 backdrop-blur-md border border-gray-200/20 dark:border-[#06315f]/20 rounded-lg p-1">
         <button
           onClick={() => handleThemeChange('light')}
           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all ${
             theme === 'light' 
               ? 'bg-white text-gray-900 shadow-sm' 
-              : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+              : 'text-gray-700 hover:text-white hover:bg-gray-700/50'
           }`}
         >
           <Sun className="w-4 h-4" />
@@ -68,7 +68,7 @@ const ThemeToggle: React.FC = () => {
           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all ${
             theme === 'dark' 
               ? 'bg-white text-gray-900 shadow-sm' 
-              : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+              : 'text-gray-700 hover:text-white hover:bg-gray-700/50'
           }`}
         >
           <Moon className="w-4 h-4" />

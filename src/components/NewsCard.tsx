@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+"use client";
+
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Play, Pause, Volume2, VolumeX, Brain, Clock, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { NewsItem, NewsCardProps } from '@/types/news';
 
+import { useAuth } from '@/components/AuthContext';
 // 新闻卡片组件
 const NewsCard: React.FC<NewsCardProps> = ({
   news,
@@ -16,76 +19,120 @@ const NewsCard: React.FC<NewsCardProps> = ({
   showAISummary = true,
   onAISummaryClick
 }) => {
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const { user } = useAuth();
   const [isFavorited, setIsFavorited] = useState(false);
 
-  // 检查是否已收藏
+  // 视频控制相关 state/ref
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // 从后端检查是否已收藏
   useEffect(() => {
-    try {
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      setIsFavorited(favorites.some((item: NewsItem) => item.id === news.id));
-    } catch (error) {
-      console.error('检查收藏状态失败:', error);
+    let mounted = true;
+    const checkFavorite = async () => {
+      if (!user) return;
+      try {
+        const res = await fetch(`/api/favorites?newsId=${encodeURIComponent(news.id)}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const json = await res.json();
+        if (mounted) setIsFavorited(Boolean(json?.favorited));
+      } catch (err) {
+        console.error('检查收藏状态失败:', err);
+      }
+    };
+
+    checkFavorite();
+    return () => { mounted = false; };
+  }, [news.id, user]);
+
+  // 处理收藏/取消收藏（使用后端 API）
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+      return;
     }
-  }, [news.id]);
 
-  const handleVideoPlay = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsVideoPlaying(!isVideoPlaying);
-  };
-
-  const handleAISummaryClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (onAISummaryClick) {
-      onAISummaryClick(news.id);
-    }
-  };
-
-  // 处理收藏/取消收藏
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
     try {
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      
       if (isFavorited) {
-        // 取消收藏
-        const updatedFavorites = favorites.filter((item: NewsItem) => item.id !== news.id);
-        localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+        const res = await fetch('/api/favorites', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newsId: news.id }),
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('取消收藏失败');
         setIsFavorited(false);
       } else {
-        // 添加收藏
-        const updatedFavorites = [news, ...favorites];
-        localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+        const res = await fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newsId: news.id, newsData: news }),
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('添加收藏失败');
         setIsFavorited(true);
       }
-    } catch (error) {
-      console.error('收藏操作失败:', error);
+    } catch (err) {
+      console.error('收藏操作失败:', err);
     }
   };
 
-  // 添加到历史记录
-  const addToHistory = () => {
+  // 添加到历史记录（通过后端 API）
+  const addToHistory = async () => {
+    if (!user) return;
     try {
-      const history = JSON.parse(localStorage.getItem('readingHistory') || '[]');
-      const newHistory = [news, ...history.filter((item: NewsItem) => item.id !== news.id)].slice(0, 50);
-      localStorage.setItem('readingHistory', JSON.stringify(newHistory));
-    } catch (error) {
-      console.error('添加到历史记录失败:', error);
+      await fetch('/api/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newsId: news.id, newsData: news }),
+        credentials: 'include'
+      });
+    } catch (err) {
+      console.error('添加到历史记录失败:', err);
     }
   };
 
-  const formatDuration = (duration: string) => {
-    // 将秒数转换为 mm:ss 格式
-    const seconds = parseInt(duration);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  // 视频播放/暂停 切换
+  const handleVideoPlay = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const v = videoRef.current;
+    if (!v) return;
+    if (isVideoPlaying) {
+      v.pause();
+      setIsVideoPlaying(false);
+    } else {
+      v.play().catch(err => console.warn('视频播放失败', err));
+      setIsVideoPlaying(true);
+    }
   };
+
+  // AI 解读按钮代理
+  const handleAISummaryClick = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (onAISummaryClick) onAISummaryClick(news.id);
+  };
+
+  const formatDuration = (sec?: number | string) => {
+    if (sec === undefined || sec === null) return '';
+    const n = typeof sec === 'string' ? Number(sec) : sec;
+    if (!n || isNaN(n)) return '';
+    const s = Math.floor(n % 60).toString().padStart(2, '0');
+    const m = Math.floor(n / 60).toString();
+    return `${m}:${s}`;
+  };
+
+  // 其余代码保持不变...
+
 
   return (
     <div className={cardClass}>
@@ -95,6 +142,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
           // 视频内容
           <div className="relative w-full h-full">
             <video
+              ref={videoRef}
               src={news.videoUrl}
               poster={news.videoThumbnail || news.imageUrl}
               className="w-full h-full object-cover"
@@ -110,6 +158,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
               <button
                 onClick={handleVideoPlay}
                 className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors"
+                aria-label={isVideoPlaying ? '暂停视频' : '播放视频'}
+                title={isVideoPlaying ? '暂停' : '播放'}
               >
                 {isVideoPlaying ? (
                   <Pause className="w-6 h-6 text-white" />
@@ -131,9 +181,11 @@ const NewsCard: React.FC<NewsCardProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setIsVideoMuted(!isVideoMuted);
+                setIsVideoMuted(prev => !prev);
+                if (videoRef.current) videoRef.current.muted = !isVideoMuted;
               }}
               className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded hover:bg-black/70 transition-colors"
+              title={isVideoMuted ? '取消静音' : '静音'}
             >
               {isVideoMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>

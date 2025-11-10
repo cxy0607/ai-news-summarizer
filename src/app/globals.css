@@ -11,13 +11,14 @@
 }
 
 .dark {
-  --background: #0a0a0a; /* 深色模式背景 */
-  --foreground: #ededed; /* 深色模式文字 */
-  --navbar-bg: rgba(10, 10, 10, 0.8); /* 深色导航栏背景 */
-  --navbar-border: rgba(255, 255, 255, 0.1); /* 深色导航栏边框 */
-  --card-bg: rgba(30, 30, 30, 0.7); /* 深色卡片背景 */
-  --card-border: rgba(255, 255, 255, 0.1); /* 深色卡片边框 */
-  --highlight: #60a5fa; /* 深色强调色 */
+  /* 深色模式：科技感蓝色主题 */
+  --background: linear-gradient(180deg, #031028 0%, #062a4a 100%);
+  --foreground: #e6f7ff; /* 浅色文字 */
+  --navbar-bg: rgba(3, 10, 30, 0.85);
+  --navbar-border: rgba(100, 150, 255, 0.06);
+  --card-bg: rgba(6, 25, 44, 0.75);
+  --card-border: rgba(100, 150, 255, 0.06);
+  --highlight: #3fb0ff; /* 科技蓝强调色 */
 }
 
 body {
@@ -31,3 +32,14 @@ body {
 .min-h-screen {
   background-color: var(--background) !important;
 }
+
+/* 强制覆盖常见 Tailwind 深色类以实现统一的深蓝色调 */
+.dark .bg-gray-900 { background-color: #041428 !important; }
+.dark .bg-gray-800 { background-color: #062a44 !important; }
+.dark .bg-gray-700 { background-color: #0b3b5a !important; }
+.dark .bg-gray-200 { background-color: rgba(255,255,255,0.03) !important; }
+.dark .text-gray-100 { color: #e6f7ff !important; }
+.dark .text-gray-300 { color: #9fd6ff !important; }
+.dark .text-gray-400 { color: #80c0ff !important; }
+.dark .border-gray-300 { border-color: rgba(100,150,255,0.06) !important; }
+.dark .border-gray-700 { border-color: rgba(255,255,255,0.06) !important; }

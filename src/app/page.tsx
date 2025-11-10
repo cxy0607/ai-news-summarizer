@@ -230,7 +230,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 dark:bg-gray-50 text-gray-100 dark:text-gray-900 overflow-x-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#071740] text-gray-900 dark:text-gray-100 overflow-x-hidden transition-colors duration-300">
       <ParticleBackground />
       
       <Navbar 
@@ -249,19 +249,19 @@ export default function HomePage() {
             <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-pulse mb-4">
               智能新闻聚合平台
             </h1>
-            <p className="text-xl text-gray-300 dark:text-gray-600 mb-6">实时抓取全网科技、环境、汽车等领域新闻</p>
+            <p className="text-xl text-gray-700 dark:text-gray-400 mb-6">实时抓取全网科技、环境、汽车等领域新闻</p>
             
             {/* 统计信息 */}
-            <div className="flex justify-center gap-8 text-sm text-gray-400 dark:text-gray-500 mb-8">
-              <div className="flex items-center gap-2 bg-gray-800/50 dark:bg-gray-200/50 px-4 py-2 rounded-full backdrop-blur-sm">
+            <div className="flex justify-center gap-8 text-sm text-gray-600 dark:text-gray-400 mb-8">
+              <div className="flex items-center gap-2 bg-white/50 dark:bg-[#071740]/50 px-4 py-2 rounded-full backdrop-blur-sm">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span>实时更新</span>
               </div>
-              <div className="flex items-center gap-2 bg-gray-800/50 dark:bg-gray-200/50 px-4 py-2 rounded-full backdrop-blur-sm">
+              <div className="flex items-center gap-2 bg-white/50 dark:bg-[#071740]/50 px-4 py-2 rounded-full backdrop-blur-sm">
                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                 <span>AI解读</span>
               </div>
-              <div className="flex items-center gap-2 bg-gray-800/50 dark:bg-gray-200/50 px-4 py-2 rounded-full backdrop-blur-sm">
+              <div className="flex items-center gap-2 bg-white/50 dark:bg-[#071740]/50 px-4 py-2 rounded-full backdrop-blur-sm">
                 <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
                 <span>多媒体支持</span>
               </div>
@@ -300,14 +300,14 @@ export default function HomePage() {
         {/* 搜索框 */}
         <div className="relative max-w-2xl mx-auto mb-8">
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur-md"></div>
-          <div className="relative bg-gray-800/80 dark:bg-gray-200/80 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl">
+          <div className="relative bg-white/80 dark:bg-[#071740]/80 backdrop-blur-md border border-blue-500/20 dark:border-[#08306b]/20 rounded-xl">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-400 w-5 h-5" />
             <input
               type="text"
               placeholder="搜索新闻标题或内容..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-cyan-400 text-gray-200 dark:text-gray-800 placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full pl-10 pr-10 py-3 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-cyan-400 text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
               aria-label="搜索新闻"
             />
             {searchTerm && (
@@ -326,7 +326,7 @@ export default function HomePage() {
         <div className="md:hidden mb-6">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex items-center gap-2 px-4 py-3 bg-gray-800/80 dark:bg-gray-200/80 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-lg w-full justify-between hover:bg-gray-700/80 dark:hover:bg-gray-100/80 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 bg-white/80 dark:bg-[#071740]/80 backdrop-blur-md border border-blue-500/20 dark:border-[#08306b]/20 rounded-lg w-full justify-between hover:bg-gray-100 dark:hover:bg-[#08306b] transition-colors"
           >
             <span className="flex items-center gap-1.5">
               <Filter className="w-4 h-4 text-cyan-400" />
@@ -335,7 +335,7 @@ export default function HomePage() {
           </button>
 
           {mobileMenuOpen && (
-            <div className="mt-2 bg-gray-800/80 dark:bg-gray-200/80 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-lg p-2">
+            <div className="mt-2 bg-white/80 dark:bg-[#071740]/80 backdrop-blur-md border border-blue-500/20 dark:border-[#08306b]/20 rounded-lg p-2">
               {categories.map((category) => (
                 <button
                   key={category}
@@ -343,7 +343,7 @@ export default function HomePage() {
                   className={`w-full text-left px-3 py-2.5 rounded-md text-sm flex items-center gap-2 transition-colors ${
                     activeCategory === category
                       ? 'bg-blue-900/30 dark:bg-blue-100/30 text-cyan-400 border-l-2 border-cyan-400'
-                      : 'text-gray-300 dark:text-gray-700 hover:bg-gray-700/50 dark:hover:bg-gray-100/50'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-[#08306b]/60'
                   }`}
                 >
                   <CategoryIcon category={category} />
@@ -375,7 +375,7 @@ export default function HomePage() {
               className={`px-4 py-2.5 rounded-lg text-sm whitespace-nowrap flex items-center gap-1.5 transition-all ${
                 activeCategory === category
                   ? 'bg-gradient-to-r from-cyan-500/80 to-blue-600/80 text-white shadow-lg shadow-blue-500/20'
-                  : 'bg-gray-800/60 dark:bg-gray-200/60 text-gray-300 dark:text-gray-700 hover:bg-gray-700/60 dark:hover:bg-gray-100/60 border border-gray-700 dark:border-gray-300'
+                      : 'bg-gray-100/60 dark:bg-[#071740]/60 text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-[#08306b]/60 border border-gray-200 dark:border-[#08306b]'
               }`}
             >
               <CategoryIcon category={category} />
@@ -390,25 +390,25 @@ export default function HomePage() {
             {[...Array(6)].map((_, i) => (
               <div 
                 key={i} 
-                className="bg-gray-800/60 dark:bg-gray-200/60 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl overflow-hidden shadow-lg shadow-blue-900/10 animate-pulse"
+                className="bg-white/60 dark:bg-[#071740]/60 backdrop-blur-md border border-gray-200 dark:border-[#08306b]/20 rounded-xl overflow-hidden shadow-lg shadow-blue-900/10 animate-pulse"
               >
-                <div className="h-40 bg-gradient-to-r from-gray-700/50 to-gray-600/50"></div>
+                <div className="h-40 bg-gradient-to-r from-gray-100/80 to-gray-200/80 dark:from-gray-800/50 dark:to-gray-700/50"></div>
                 <div className="p-5">
-                  <div className="h-6 bg-gray-700/50 rounded w-3/4 mb-3"></div>
-                  <div className="h-4 bg-gray-700/50 rounded w-full mb-2"></div>
-                  <div className="h-4 bg-gray-700/50 rounded w-full mb-2"></div>
-                  <div className="h-4 bg-gray-700/50 rounded w-2/3"></div>
-                  <div className="mt-4 h-4 bg-gray-700/50 rounded w-1/4"></div>
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-3 dark:bg-[#08306b]"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mb-2 dark:bg-[#08306b]"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mb-2 dark:bg-[#08306b]"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3 dark:bg-[#08306b]"></div>
+                  <div className="mt-4 h-4 bg-gray-200 rounded w-1/4 dark:bg-[#08306b]"></div>
                 </div>
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-16 bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl shadow-lg">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-900/30 dark:bg-blue-100/30 text-cyan-400 mb-4">
+          <div className="text-center py-16 bg-white/40 dark:bg-[#071740]/40 backdrop-blur-md border border-blue-500/20 dark:border-[#08306b]/20 rounded-xl shadow-lg">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 dark:bg-[#08306b]/30 text-cyan-400 mb-4">
               <X className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-semibold text-cyan-300 dark:text-cyan-600 mb-2">{error}</h2>
+            <h2 className="text-xl font-semibold text-cyan-600 dark:text-cyan-300 mb-2">{error}</h2>
             <button
               onClick={() => {
                 setLoading(true);
@@ -445,11 +445,11 @@ export default function HomePage() {
                 key={item.id}
                 news={item}
                 index={index}
-                cardClass="bg-gray-800/60 dark:bg-gray-200/60 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl overflow-hidden shadow-lg hover:shadow-blue-900/20 dark:hover:shadow-blue-100/20 transition-shadow"
-                titleClass="text-xl font-bold text-white dark:text-gray-900 hover:text-cyan-400 transition-colors"
-                sourceClass="text-gray-400 dark:text-gray-600 text-sm"
-                timeClass="text-gray-500 dark:text-gray-500 text-xs"
-                summaryClass="text-gray-300 dark:text-gray-700 line-clamp-3"
+                cardClass="bg-white/60 dark:bg-[#071740]/60 backdrop-blur-md border border-gray-200 dark:border-[#08306b]/20 rounded-xl overflow-hidden shadow-lg hover:shadow-blue-900/20 dark:hover:shadow-blue-100/20 transition-shadow"
+                titleClass="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                sourceClass="text-gray-600 dark:text-gray-400 text-sm"
+                timeClass="text-gray-500 dark:text-gray-400 text-xs"
+                summaryClass="text-gray-700 dark:text-gray-300 line-clamp-3"
                 categoryIcon={<CategoryIcon category={item.category} />}
                 showAISummary={true}
                 onAISummaryClick={handleAISummaryClick}
@@ -457,15 +457,15 @@ export default function HomePage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-gray-800/40 dark:bg-gray-200/40 backdrop-blur-md border border-blue-500/20 dark:border-gray-300/20 rounded-xl shadow-lg">
-            <p className="text-gray-400 dark:text-gray-600">没有找到匹配的新闻</p>
+          <div className="text-center py-16 bg-white/40 dark:bg-[#071740]/40 backdrop-blur-md border border-gray-200 dark:border-[#08306b]/20 rounded-xl shadow-lg">
+            <p className="text-gray-600 dark:text-gray-200">没有找到匹配的新闻</p>
             <button
               onClick={() => {
                 setSearchTerm('');
                 setActiveCategory(null);
                 window.history.pushState({}, '', '/');
               }}
-              className="mt-4 px-4 py-2 bg-gray-700 dark:bg-gray-300 text-gray-200 dark:text-gray-800 rounded-lg hover:bg-gray-600 dark:hover:bg-gray-200 transition-colors"
+              className="mt-4 px-4 py-2 bg-gray-100 dark:bg-[#08306b] text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-[#06213a] transition-colors"
             >
               查看全部新闻
             </button>

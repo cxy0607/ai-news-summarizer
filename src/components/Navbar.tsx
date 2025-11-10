@@ -30,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({
   return (
     // src/components/Navbar.tsx - 第28行修改
 
-<nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 dark:bg-white/80 backdrop-blur-md border-b border-blue-500/20 dark:border-gray-200 transition-colors duration-300">
+<nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-[#02183a]/80 backdrop-blur-md border-b border-gray-200 dark:border-[#06315f]/20 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -77,12 +77,12 @@ const Navbar: React.FC<NavbarProps> = ({
               <ThemeToggle />
               {isAuthenticated ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-300 text-sm">
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">
                     欢迎，{user?.name}
                   </span>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-1.5 text-gray-300 hover:text-cyan-400 transition-colors"
+                    className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 hover:text-cyan-400 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>登出</span>
@@ -91,7 +91,7 @@ const Navbar: React.FC<NavbarProps> = ({
               ) : (
                 <Link 
                   href="/login" 
-                  className="flex items-center gap-1.5 text-gray-300 hover:text-cyan-400 transition-colors"
+                  className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 hover:text-cyan-400 transition-colors"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>登录</span>
@@ -104,7 +104,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="md:hidden flex items-center">
             <button
               onClick={onToggleMobileMenu}
-              className={`${textColor} hover:text-cyan-400`}
+              className={`${textColor} dark:${textColor} hover:text-cyan-400`}
               aria-label="主菜单"
             >
               {isMobileMenuOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
@@ -157,7 +157,7 @@ const Navbar: React.FC<NavbarProps> = ({
             {/* 移动端登录/登出按钮 */}
             {isAuthenticated ? (
               <div className="px-3 py-2">
-                <div className="text-gray-300 text-sm mb-2">
+                <div className="text-gray-700 dark:text-gray-300 text-sm mb-2">
                   欢迎，{user?.name}
                 </div>
                 <button
@@ -165,7 +165,7 @@ const Navbar: React.FC<NavbarProps> = ({
                     handleLogout();
                     onToggleMobileMenu();
                   }}
-                  className="flex items-center gap-1.5 text-gray-300 hover:text-cyan-400 transition-colors"
+                  className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 hover:text-cyan-400 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>登出</span>
@@ -175,7 +175,7 @@ const Navbar: React.FC<NavbarProps> = ({
               <Link
                 href="/login"
                 onClick={onToggleMobileMenu}
-                className="flex items-center gap-1.5 px-3 py-2 text-gray-300 hover:text-cyan-400 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-cyan-400 transition-colors"
               >
                 <LogIn className="w-4 h-4" />
                 <span>登录</span>
