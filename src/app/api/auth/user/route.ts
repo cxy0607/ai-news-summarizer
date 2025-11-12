@@ -10,11 +10,11 @@ function getUserIdFromRequest(request: Request) {
 export async function GET(request: Request) {
   try {
     const userId = getUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ success: false, error: '未登录' }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, message: '未登录' }, { status: 401 });
 
     const [rows] = await pool.execute('SELECT id, email, name, avatar, preferences, joinDate, lastLogin FROM users WHERE id = ?', [userId]);
     // @ts-ignore
-    if ((rows as any[]).length === 0) return NextResponse.json({ success: false, error: '用户不存在' }, { status: 404 });
+  if ((rows as any[]).length === 0) return NextResponse.json({ success: false, message: '用户不存在' }, { status: 404 });
 
     // @ts-ignore
     const r = (rows as any[])[0];
@@ -30,15 +30,15 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, user });
   } catch (error) {
-    console.error('获取用户信息失败:', error);
-    return NextResponse.json({ success: false, error: '内部错误' }, { status: 500 });
+  console.error('获取用户信息失败:', error);
+  return NextResponse.json({ success: false, message: '内部错误' }, { status: 500 });
   }
 }
 
 export async function PATCH(request: Request) {
   try {
     const userId = getUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ success: false, error: '未登录' }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, message: '未登录' }, { status: 401 });
 
     const body = await request.json();
     const fields: string[] = [];
@@ -50,7 +50,7 @@ export async function PATCH(request: Request) {
     if (body.preferences) { fields.push('preferences = ?'); values.push(JSON.stringify(body.preferences)); }
 
     if (fields.length === 0) {
-      return NextResponse.json({ success: false, error: '没有要更新的字段' }, { status: 400 });
+  return NextResponse.json({ success: false, message: '没有要更新的字段' }, { status: 400 });
     }
 
     values.push(userId);
@@ -72,7 +72,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true, user });
   } catch (error) {
-    console.error('更新用户信息失败:', error);
-    return NextResponse.json({ success: false, error: '更新失败' }, { status: 500 });
+  console.error('更新用户信息失败:', error);
+  return NextResponse.json({ success: false, message: '更新失败' }, { status: 500 });
   }
 }

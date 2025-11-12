@@ -290,14 +290,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* 演示账户提示 */}
-          <div className="mt-6 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg">
-            <p className="text-blue-200 text-sm text-center">
-              <strong>演示账户：</strong><br />
-              邮箱：demo@example.com<br />
-              密码：password
-            </p>
-          </div>
+          {/* 示例账号提示已移除（如需测试请使用注册功能） */}
         </div>
       </div>
     </div>

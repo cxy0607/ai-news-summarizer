@@ -1,17 +1,15 @@
 import mysql from 'mysql2/promise';
 
-// 创建数据库连接池
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '050607',
-  database: 'ai-news-summarizer',
-  port: 3306,
+export const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'ai_news_summary',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
-
 // 测试数据库连接
 async function testConnection() {
   try {
@@ -64,10 +62,24 @@ async function initTables() {
     )
   `;
 
+  // 密码重置表
+  const createPasswordResetsTable = `
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      userId VARCHAR(255) NOT NULL,
+      token VARCHAR(255) NOT NULL,
+      expiresAt DATETIME NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY unique_token (token)
+    )
+  `;
+
   try {
     await pool.execute(createUsersTable);
     await pool.execute(createFavoritesTable);
     await pool.execute(createHistoryTable);
+    await pool.execute(createPasswordResetsTable);
     console.log('数据库表初始化成功');
   } catch (error) {
     console.error('数据库表初始化失败:', error);

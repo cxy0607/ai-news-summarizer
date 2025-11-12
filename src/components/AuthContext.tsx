@@ -43,22 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
     const { email, password } = credentials;
     try {
-      // 本地演示账户支持
-      if (email === 'demo@example.com' && password === 'password') {
-        const demoUser: User = {
-          id: '1',
-          email: 'demo@example.com',
-          name: 'Demo User',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
-          preferences: {
-            darkMode: false,
-            subscriptions: ['technology', 'business']
-          }
-        };
-        setUser(demoUser);
-        localStorage.setItem('user', JSON.stringify(demoUser));
-        return;
-      }
+      // demo account removed — use real auth endpoint
 
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -68,8 +53,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || '登录失败');
+        // 尝试解析后端返回的 JSON 错误消息，优先使用常见字段（error/message/details），否则回退为纯文本
+        try {
+          const errJson = await res.json();
+          const msg = errJson?.error || errJson?.message || errJson?.details || '登录失败';
+          throw new Error(msg);
+        } catch (e) {
+          const errText = await res.text();
+          throw new Error(errText || '登录失败');
+        }
       }
 
       const json = await res.json();
@@ -101,8 +93,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || '注册失败');
+        // 尝试解析JSON错误详情
+        try {
+          const errJson = await res.json();
+          throw new Error(errJson?.error || errJson?.details || '注册失败');
+        } catch (e) {
+          const errText = await res.text();
+          throw new Error(errText || '注册失败');
+        }
       }
 
       const json = await res.json();

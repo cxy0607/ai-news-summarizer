@@ -285,17 +285,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 失败源提示 */}
-        {failedSources.length > 0 && (
-          <div className="bg-blue-900/30 dark:bg-blue-100/30 border border-blue-500/30 dark:border-blue-500/30 text-blue-300 dark:text-blue-700 px-4 py-3 rounded-lg mb-6 flex items-start backdrop-blur-sm">
-            <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-cyan-400" />
-            <div className="text-sm">
-              <p className="font-medium">部分新闻源暂时无法访问:</p>
-              <p className="mt-1">{failedSources.join(', ')}</p>
-              <p className="mt-1 text-cyan-300 dark:text-cyan-600">已为您切换到备用新闻源</p>
-            </div>
-          </div>
-        )}
+        
 
         {/* 搜索框 */}
         <div className="relative max-w-2xl mx-auto mb-8">

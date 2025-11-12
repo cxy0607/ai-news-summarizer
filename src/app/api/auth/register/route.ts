@@ -36,8 +36,14 @@ export async function POST(request: Request) {
     };
 
     const res = NextResponse.json({ success: true, user });
-    // 设置 cookie
-    res.cookies.set('userId', id, { httpOnly: true, path: '/', maxAge: 60 * 60 * 24 * 7 });
+    // 设置 cookie（显式 sameSite & secure）
+    res.cookies.set('userId', id, {
+      httpOnly: true,
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
     return res;
   } catch (error) {
     console.error('注册出错:', error);
